@@ -47,11 +47,9 @@ The tests need no installation. The project has no dependency.
 
 ## The icon
 
-`icons/icon.png` is the icon the manifest names. `icons/icon.svg` is
-the same artwork in vector form.
-
-The PNG is 398 x 278 pixels. The browser scales it into a square slot,
-so the toolbar shows it with space above and below.
+The manifest names five square PNG files in `icons/`: 16, 32, 48, 64,
+and 128 pixels. `icons/yt_pip_icon.svg` is the same artwork in vector
+form.
 
 ## Repair a broken selector
 

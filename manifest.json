@@ -4,7 +4,11 @@
   "version": "0.1.0",
   "description": "Opens the YouTube miniplayer when you leave a watch page.",
   "icons": {
-    "128": "icons/icon.png"
+    "16": "icons/yt_pip_icon_16.png",
+    "32": "icons/yt_pip_icon_32.png",
+    "48": "icons/yt_pip_icon_48.png",
+    "64": "icons/yt_pip_icon_64.png",
+    "128": "icons/yt_pip_icon_128.png"
   },
   "permissions": [
     "storage"
@@ -30,7 +34,11 @@
     "default_popup": "popup.html",
     "default_title": "YT Auto Miniplayer",
     "default_icon": {
-      "128": "icons/icon.png"
+      "16": "icons/yt_pip_icon_16.png",
+      "32": "icons/yt_pip_icon_32.png",
+      "48": "icons/yt_pip_icon_48.png",
+      "64": "icons/yt_pip_icon_64.png",
+      "128": "icons/yt_pip_icon_128.png"
     }
   },
   "browser_specific_settings": {
