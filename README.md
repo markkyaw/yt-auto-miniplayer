@@ -1,21 +1,12 @@
 # YT Auto Miniplayer
 
-A Firefox and Chrome extension. It opens the YouTube miniplayer when you
-leave a watch page. The video continues to play.
-
-The extension also keeps the video alive when you press the back
-button on a watch page.
-
-The extension stays silent when a queue or a playlist is active. YouTube
-already keeps the video alive in that case.
+A Firefox and Chrome extension. It opens the YouTube miniplayer when you navigate away or press back and keeps playing.
 
 ## Demo
 
 ![The extension in use](docs/media/demo.gif)
 
-The picture above is a GIF file, so it plays inside this page. It is
-720 pixels wide at 10 frames each second, and it holds no sound.
-[The MP4 file](docs/media/demo.mp4) holds the full quality.
+[The MP4 file of demo](docs/media/demo.mp4)
 
 ## Install in Firefox for a test
 
@@ -33,17 +24,17 @@ Firefox removes a temporary add-on when it closes.
 
 ## Turn the extension on or off
 
+![alt text](docs/media/settings.png)
+
 Select the toolbar button. The popup shows two switches and one field.
 
-| Control                          | Effect                                                                       | Default |
-| -------------------------------- | ---------------------------------------------------------------------------- | ------- |
-| Automatic miniplayer             | The video moves to the miniplayer when you switch to a different page        | On      |
-| Also on the back button          | The video moves to the miniplayer when you press the back button             | On      |
-| Only after N seconds on the page | The back button acts only when you stayed on the watch page longer than N    | 5       |
+| Control                          | Effect                                                                    | Default |
+| -------------------------------- | ------------------------------------------------------------------------- | ------- |
+| Automatic miniplayer             | The video moves to the miniplayer when you switch to a different page     | On      |
+| Also on the back button          | The video moves to the miniplayer when you press the back button          | On      |
+| Only after N seconds on the page | The back button acts only when you stayed on the watch page longer than N | 5       |
 
-The first switch gates every behavior. The second switch appears only
-while the first switch is on. The seconds field appears only while the
-second switch is on.
+The extension can be turned on/off by toggling the first checkbox
 
 The seconds rule applies to the back button only. A link click opens
 the miniplayer at once. A value of 0 turns the minimum off.
@@ -82,20 +73,3 @@ Upload the same file to both stores:
 The content script runs on `www.youtube.com` and `youtube.com` only.
 It does not run on `music.youtube.com`, `m.youtube.com`, or
 `studio.youtube.com`.
-
-## The icon
-
-The manifest names four square PNG files in `icons/`: 16, 32, 48, and
-128 pixels. `icons/yt_auto_pip.svg` is the same artwork in vector
-form. The manifest does not name it, because Chrome does not accept an
-SVG icon.
-
-## Repair a broken selector
-
-YouTube can change its page at any time. Every selector is in
-`src/youtube-page.js`. Change the value in `SELECTORS` and reload the
-add-on.
-
-## Design
-
-Read `docs/superpowers/specs/2026-08-26-yt-auto-miniplayer-design.md`.
