@@ -34,10 +34,24 @@ function installBackPage(options) {
   const opts = options || {};
   return installPage({
     pathname: opts.pathname === undefined ? '/@somechannel' : opts.pathname,
+    navigation: opts.navigation,
+    entryIndex: opts.entryIndex,
     bySelector: opts.video === null ? {} : {
       [VIDEO]: fakeElement({ tagName: 'VIDEO', paused: !!opts.paused })
     }
   });
+}
+
+// Builds a fake navigate event. The default is a back traversal.
+function navigateEvent(options) {
+  const opts = options || {};
+  return {
+    navigationType: opts.navigationType || 'traverse',
+    destination: {
+      url: opts.url || 'https://www.youtube.com/@somechannel',
+      index: opts.index === undefined ? 4 : opts.index
+    }
+  };
 }
 
 test('isVideoPlaying is true when a video runs', () => {
@@ -118,7 +132,7 @@ test('handlePopState never throws', () => {
 });
 
 test('start arms the popstate listener only after the settings load', async () => {
-  const dom = installBackPage({});
+  const dom = installBackPage({ navigation: false });
   installModules({});
   let finishLoad;
   globalThis.YtAmp.settings.load = function () {
@@ -139,4 +153,79 @@ test('start watches the settings itself', () => {
   const opened = installModules({});
   back.start();
   assert.strictEqual(opened.watched, 1);
+});
+
+test('isBackTraversal is true for a step back in the history', () => {
+  installBackPage({ pathname: '/watch', entryIndex: 5 });
+  assert.strictEqual(back.isBackTraversal(navigateEvent({ index: 4 })), true);
+});
+
+test('isBackTraversal is false for a step forward', () => {
+  installBackPage({ pathname: '/watch', entryIndex: 5 });
+  assert.strictEqual(back.isBackTraversal(navigateEvent({ index: 6 })), false);
+});
+
+// The i key makes its own push navigation. It must not press i again.
+test('isBackTraversal is false for a push navigation', () => {
+  installBackPage({ pathname: '/watch', entryIndex: 5 });
+  assert.strictEqual(
+    back.isBackTraversal(navigateEvent({ navigationType: 'push' })), false);
+});
+
+test('handleNavigate opens the miniplayer on a back traversal', () => {
+  installBackPage({ pathname: '/watch' });
+  const opened = installModules({});
+  back.handleNavigate(navigateEvent({}));
+  assert.strictEqual(opened.count, 1);
+});
+
+test('handleNavigate stays silent away from a watch page', () => {
+  installBackPage({ pathname: '/@somechannel' });
+  const opened = installModules({});
+  back.handleNavigate(navigateEvent({}));
+  assert.strictEqual(opened.count, 0);
+});
+
+// location still holds the watch page, so the rule needs the event.
+test('handleNavigate reads the destination from the event', () => {
+  installBackPage({ pathname: '/watch' });
+  const opened = installModules({});
+  back.handleNavigate(navigateEvent({ url: 'https://www.youtube.com/watch?v=abc' }));
+  assert.strictEqual(opened.count, 0);
+});
+
+test('handleNavigate stays silent for a Short', () => {
+  installBackPage({ pathname: '/watch' });
+  const opened = installModules({});
+  back.handleNavigate(navigateEvent({ url: 'https://www.youtube.com/shorts/abc' }));
+  assert.strictEqual(opened.count, 0);
+});
+
+test('handleNavigate never throws', () => {
+  installBackPage({ pathname: '/watch' });
+  installModules({});
+  globalThis.YtAmp.page.isQueueOpen = function () {
+    throw new Error('YouTube changed the DOM');
+  };
+  assert.doesNotThrow(() => back.handleNavigate(navigateEvent({})));
+});
+
+// The navigate event runs before YouTube stops the player. popstate does not.
+test('start uses the navigation API when the browser has it', async () => {
+  const dom = installBackPage({ pathname: '/watch' });
+  installModules({});
+  back.start();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.strictEqual(dom.navigationListeners.length, 1);
+  assert.strictEqual(dom.navigationListeners[0].type, 'navigate');
+  assert.strictEqual(dom.windowListeners.length, 0);
+});
+
+test('start falls back to popstate without the navigation API', async () => {
+  const dom = installBackPage({ pathname: '/watch', navigation: false });
+  installModules({});
+  back.start();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.strictEqual(dom.windowListeners.length, 1);
+  assert.strictEqual(dom.windowListeners[0].type, 'popstate');
 });

@@ -1,39 +1,62 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<title>YT Auto Miniplayer</title>
-<style>
-  body {
-    font: 14px system-ui, sans-serif;
-    margin: 0;
-    padding: 14px 16px;
-    min-width: 230px;
-  }
-  h1 { font-size: 14px; margin: 0 0 10px; }
-  label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-  /* The label rule sets display, so the hidden attribute needs this. */
-  [hidden] { display: none !important; }
-  p { color: #666; font-size: 12px; margin: 6px 0 0; line-height: 1.4; }
-  #back-row { margin-top: 12px; padding-left: 18px; }
-</style>
-</head>
-<body>
-  <h1>YT Auto Miniplayer</h1>
-  <label>
-    <input type="checkbox" id="toggle">
-    <span>Automatic miniplayer</span>
-  </label>
-  <p>The video moves to the miniplayer when you leave a watch page.</p>
-  <div id="back-row" hidden>
-    <label>
-      <input type="checkbox" id="back-toggle">
-      <span>Also on the back button</span>
-    </label>
-    <p>The back button keeps the video alive in the miniplayer.</p>
-  </div>
-  <script src="src/settings.js"></script>
-  <script src="src/popup.js"></script>
-  <script src="src/popup-main.js"></script>
-</body>
+    <head>
+        <meta charset="utf-8" />
+        <title>YT Auto Miniplayer</title>
+        <style>
+            body {
+                font:
+                    14px system-ui,
+                    sans-serif;
+                margin: 0;
+                padding: 14px 16px;
+                min-width: 230px;
+            }
+            h1 {
+                font-size: 14px;
+                margin: 0 0 10px;
+            }
+            label {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+            }
+            /* The label rule sets display, so the hidden attribute needs this. */
+            [hidden] {
+                display: none !important;
+            }
+            p {
+                color: #666;
+                font-size: 12px;
+                margin: 6px 0 0;
+                line-height: 1.4;
+            }
+            #back-row {
+                margin-top: 12px;
+                padding-left: 18px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>YT Auto Miniplayer</h1>
+        <label>
+            <input type="checkbox" id="toggle" />
+            <span>Automatic miniplayer</span>
+        </label>
+        <p>
+            The video moves to the miniplayer when you switch to a different
+            page
+        </p>
+        <div id="back-row" hidden>
+            <label>
+                <input type="checkbox" id="back-toggle" />
+                <span>Also on the back button</span>
+            </label>
+            <p>The back button keeps the video alive in the miniplayer</p>
+        </div>
+        <script src="src/settings.js"></script>
+        <script src="src/popup.js"></script>
+        <script src="src/popup-main.js"></script>
+    </body>
 </html>

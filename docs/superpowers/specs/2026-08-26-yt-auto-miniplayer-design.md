@@ -41,6 +41,17 @@ A second probe on 2026-08-26 measured the back navigation.
 | The video element when the miniplayer is open | `video.closest('ytd-miniplayer')` returns the miniplayer. |
 | A second `i` key while the miniplayer holds the video | YouTube expands the miniplayer, pushes a history entry, and resets the video. |
 
+A third probe on 2026-08-26 measured Chrome. Chrome and Firefox differ.
+
+| Fact | Result |
+|---|---|
+| YouTube's own `popstate` handler in Chrome | It stops the player inside the handler, before the extension runs. The stack is `handlePopstate` to `onYtStopOldPlayer` to `stopPlayer` to `cancelPlayback`. |
+| The player at `popstate` in Chrome | Already `t=0` and paused. Firefox keeps it alive for about 140 ms more. |
+| The `navigate` event of the Navigation API | Runs before YouTube's `popstate` handler. `location` still holds `/watch` and the video still plays. |
+| The synthetic `i` key inside `navigate` | The video keeps playing in the miniplayer. |
+| The `i` key seen from the Navigation API | It fires a second `navigate` event of type `push`. |
+| The Chrome home page | It runs a second, muted preview player. A page can hold more than one `video` element. |
+
 ## 3. Architecture
 
 The extension is a content script only. It has no background script.
@@ -171,9 +182,27 @@ The page module sends three events to `document`: `keydown`,
 
 ### 5.5 The back navigation rule
 
-A back press gives no hook that still sees the watch page. `popstate`
-runs after `location` moves. The player stays alive for about 140 ms
-more, so the handler acts inside that window.
+The extension uses the `navigate` event of the Navigation API. That
+event runs before YouTube's own `popstate` handler. `location` still
+holds `/watch`, and the player still plays.
+
+The choice matters in Chrome. YouTube stops the player inside its own
+`popstate` handler, so a `popstate` listener always arrives too late.
+Firefox stops the player about 140 ms later, so both hooks work there.
+
+`src/back.js` uses `popstate` only when the browser has no Navigation
+API. It never arms both hooks. Two hooks would send the `i` key twice.
+
+The `navigate` handler acts only when all of these are true:
+
+- The navigation type is `traverse`. The `i` key makes a `push`, and
+  that must not start the handler again.
+- The destination index is lower than the current index. A step
+  forward is not a back press.
+- `location.pathname` is still `/watch`.
+
+The destination path comes from `event.destination.url`, because
+`location` has not moved yet.
 
 `shouldOpenMiniplayerOnBack(state)` returns `true` when all of these
 are true:
@@ -205,12 +234,12 @@ from the page at `popstate` time.
 The back navigation follows a second path:
 
 1. The user presses the back button on a watch page.
-2. The capture-phase `popstate` listener runs. `location` already
-   holds the destination.
-3. `back.js` reads the page state from `youtube-page.js`.
-4. `back.js` calls `shouldOpenMiniplayerOnBack(state)`.
-5. If the answer is `true`, `youtube-page.js` sends the key events.
-6. YouTube renders the destination page. The video keeps playing in
+2. The `navigate` listener runs. `location` still holds `/watch`.
+3. `back.js` reads the destination from `event.destination.url`.
+4. `back.js` reads the page state from `youtube-page.js`.
+5. `back.js` calls `shouldOpenMiniplayerOnBack(state)`.
+6. If the answer is `true`, `youtube-page.js` sends the key events.
+7. YouTube renders the destination page. The video keeps playing in
    the miniplayer.
 
 ## 7. Error handling
@@ -296,9 +325,11 @@ the proof.
   video. No extension can prevent that.
 - The `i` key costs no history entry. It replaces the current entry.
   So the back path needs no history correction.
-- One trial in five showed a flash of an earlier page about 150 ms
-  after the back press. The correct page then loaded. The effect is
-  cosmetic.
+- A browser without the Navigation API uses `popstate`. That hook
+  works in Firefox. It does not work in Chrome, because YouTube stops
+  the player first.
+- The extension covers the back button only. A step forward through
+  the history still stops the video.
 - A second `i` key while the miniplayer holds the video expands the
   miniplayer and stops the video. The `miniplayerOpen` signal blocks
   that case. The signal must stay correct.

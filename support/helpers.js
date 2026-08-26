@@ -64,10 +64,18 @@ function installPage(options) {
   define('addEventListener', function (type, handler, capture) {
     windowListeners.push({ type: type, handler: handler, capture: capture });
   });
+  const navigationListeners = [];
+  define('navigation', opts.navigation === false ? undefined : {
+    currentEntry: { index: opts.entryIndex === undefined ? 5 : opts.entryIndex },
+    addEventListener(type, handler) {
+      navigationListeners.push({ type: type, handler: handler });
+    }
+  });
   return {
     keyEvents: keyEvents,
     listeners: listeners,
-    windowListeners: windowListeners
+    windowListeners: windowListeners,
+    navigationListeners: navigationListeners
   };
 }
 
