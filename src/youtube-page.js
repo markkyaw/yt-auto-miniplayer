@@ -1,0 +1,53 @@
+(function (root) {
+  'use strict';
+
+  // YouTube can change these at any time. Repair them here.
+  const SELECTORS = {
+    queuePanel: '#playlist.ytd-watch-flexy',
+    miniplayer: 'ytd-miniplayer'
+  };
+
+  const KEY_TYPES = ['keydown', 'keypress', 'keyup'];
+
+  function isWatchPage() {
+    return root.location.pathname === '/watch';
+  }
+
+  // A queue or a playlist makes the panel visible.
+  function isQueueOpen() {
+    const panel = root.document.querySelector(SELECTORS.queuePanel);
+    return !!panel && !panel.hasAttribute('hidden');
+  }
+
+  // The element always exists. Visibility is the real signal.
+  function isMiniplayerOpen() {
+    const mini = root.document.querySelector(SELECTORS.miniplayer);
+    if (!mini) return false;
+    if (mini.offsetParent === null) return false;
+    return mini.getBoundingClientRect().width > 0;
+  }
+
+  // YouTube opens the miniplayer for the i key.
+  function openMiniplayer() {
+    KEY_TYPES.forEach(function (type) {
+      root.document.dispatchEvent(new root.KeyboardEvent(type, {
+        key: 'i',
+        code: 'KeyI',
+        keyCode: 73,
+        which: 73,
+        bubbles: true,
+        cancelable: true,
+        composed: true
+      }));
+    });
+  }
+
+  root.YtAmp = root.YtAmp || {};
+  root.YtAmp.page = {
+    SELECTORS: SELECTORS,
+    isWatchPage: isWatchPage,
+    isQueueOpen: isQueueOpen,
+    isMiniplayerOpen: isMiniplayerOpen,
+    openMiniplayer: openMiniplayer
+  };
+})(typeof globalThis !== 'undefined' ? globalThis : this);
