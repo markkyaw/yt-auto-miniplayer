@@ -23,8 +23,16 @@ function installModules(options) {
   globalThis.YtAmp.settings = {
     isEnabled() { return opts.enabled !== false; },
     isBackEnabled() { return opts.backEnabled !== false; },
+    getMinimumSeconds() {
+      return opts.minimumSeconds === undefined ? 5 : opts.minimumSeconds;
+    },
     load() { return Promise.resolve({}); },
     watch() { opened.watched += 1; }
+  };
+  globalThis.YtAmp.watchTimer = {
+    secondsOnWatchPage() {
+      return opts.secondsOnPage === undefined ? 6 : opts.secondsOnPage;
+    }
   };
   return opened;
 }
@@ -228,4 +236,18 @@ test('start falls back to popstate without the navigation API', async () => {
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.strictEqual(dom.windowListeners.length, 1);
   assert.strictEqual(dom.windowListeners[0].type, 'popstate');
+});
+
+test('handleNavigate stays silent when the visit was too short', () => {
+  installBackPage({ pathname: '/watch' });
+  const opened = installModules({ secondsOnPage: 3 });
+  back.handleNavigate(navigateEvent({}));
+  assert.strictEqual(opened.count, 0);
+});
+
+test('handleNavigate obeys a minimum the user changed', () => {
+  installBackPage({ pathname: '/watch' });
+  const opened = installModules({ secondsOnPage: 20, minimumSeconds: 30 });
+  back.handleNavigate(navigateEvent({}));
+  assert.strictEqual(opened.count, 0);
 });

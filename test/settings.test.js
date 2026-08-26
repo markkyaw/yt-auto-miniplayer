@@ -38,9 +38,10 @@ function installStorage(initial, failing) {
 test('load uses true for both keys when the store is empty', async () => {
   installStorage({});
   assert.deepStrictEqual(await settings.load(),
-    { enabled: true, backOpensMiniplayer: true });
+    { enabled: true, backOpensMiniplayer: true, minimumSeconds: 5 });
   assert.strictEqual(settings.isEnabled(), true);
   assert.strictEqual(settings.isBackEnabled(), true);
+  assert.strictEqual(settings.getMinimumSeconds(), 5);
 });
 
 test('load reads a stored false for the main key', async () => {
@@ -61,7 +62,7 @@ test('load reads a stored false for the back key', async () => {
 test('load uses true when the storage call fails', async () => {
   installStorage({ enabled: false, backOpensMiniplayer: false }, true);
   assert.deepStrictEqual(await settings.load(),
-    { enabled: true, backOpensMiniplayer: true });
+    { enabled: true, backOpensMiniplayer: true, minimumSeconds: 5 });
 });
 
 test('save writes the main key and caches it', async () => {
@@ -126,4 +127,44 @@ test('watch registers one listener even after two calls', async () => {
   settings.watch();
   settings.watch();
   assert.strictEqual(fake.listeners.length, 1);
+});
+
+test('load reads a stored number of seconds', async () => {
+  installStorage({ minimumSeconds: 12 });
+  await settings.load();
+  assert.strictEqual(settings.getMinimumSeconds(), 12);
+});
+
+test('load accepts zero seconds', async () => {
+  installStorage({ minimumSeconds: 0 });
+  await settings.load();
+  assert.strictEqual(settings.getMinimumSeconds(), 0);
+});
+
+// A broken value must never stop the rule from working.
+test('load uses the default for a value that is not a number', async () => {
+  installStorage({ minimumSeconds: 'soon' });
+  await settings.load();
+  assert.strictEqual(settings.getMinimumSeconds(), 5);
+});
+
+test('load uses the default for a negative number', async () => {
+  installStorage({ minimumSeconds: -3 });
+  await settings.load();
+  assert.strictEqual(settings.getMinimumSeconds(), 5);
+});
+
+test('save writes the number of seconds', async () => {
+  const fake = installStorage({});
+  await settings.save('minimumSeconds', 8);
+  assert.strictEqual(fake.store.minimumSeconds, 8);
+  assert.strictEqual(settings.getMinimumSeconds(), 8);
+});
+
+test('watch applies a change of the seconds at once', async () => {
+  const fake = installStorage({});
+  await settings.load();
+  settings.watch();
+  fake.listeners[0]({ minimumSeconds: { newValue: 15 } }, 'local');
+  assert.strictEqual(settings.getMinimumSeconds(), 15);
 });

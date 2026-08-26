@@ -80,6 +80,7 @@ the user's click.
 | `src/decide.js` | One pure function. State in, boolean out. No DOM. |
 | `src/content.js` | Reads the click. Builds the state. Calls `decide`. Calls the page module. |
 | `src/back.js` | Reads the back navigation. Builds the state. Calls `decide`. Calls the page module. |
+| `src/watch-timer.js` | Counts the seconds on the current watch page. |
 | `src/settings.js` | Reads and writes the two toggles in `storage.local`. |
 | `popup.html`, `src/popup.js`, `src/popup-main.js` | The two toolbar toggles. |
 | `manifest.json` | The extension manifest. |
@@ -169,6 +170,7 @@ wanted to keep. That result is worse than no extension.
 | `queueOpen` | `#playlist.ytd-watch-flexy` exists and has no `hidden` attribute |
 | `miniplayerOpen` | `video.closest('ytd-miniplayer')` returns an element |
 | `videoPlaying` | A `video` element exists and `paused` is `false` |
+| `secondsOnPage` | The seconds since the current watch page opened |
 
 The miniplayer uses `position: fixed`. A fixed element always reports
 `offsetParent === null`, so a visibility test on `ytd-miniplayer` fails
@@ -210,11 +212,12 @@ are true:
 1. The main toggle is on.
 2. The back toggle is on.
 3. A video plays.
-4. The destination path is not `/watch` and not a Short.
-5. No queue or playlist is open.
-6. The miniplayer does not hold the video already.
+4. The visit to the watch page is longer than `minimumSeconds`.
+5. The destination path is not `/watch` and not a Short.
+6. No queue or playlist is open.
+7. The miniplayer does not hold the video already.
 
-Rule 6 carries the feature. A second `i` key expands the miniplayer,
+Rule 7 carries the feature. A second `i` key expands the miniplayer,
 pushes a history entry, and stops the video.
 
 The handler keeps no state between navigations. Every signal comes
@@ -258,8 +261,18 @@ The toolbar button opens a small popup. The popup shows two switches.
 |---|---|---|
 | `enabled` | Automatic miniplayer | `true` |
 | `backOpensMiniplayer` | Also on the back button | `true` |
+| `minimumSeconds` | Only after N seconds on the page | `5` |
 
-The second switch is hidden while the first switch is off. The popup
+`src/watch-timer.js` samples `location.href` every second. A new URL
+restarts the clock. The module reads no YouTube event, so a change to
+the YouTube page cannot break it. A sample can be up to one second
+late, which makes the count shorter, never longer.
+
+The rule applies to the back button only. A link click opens the
+miniplayer at once, with no minimum time.
+
+The second switch is hidden while the first switch is off. The seconds
+field is hidden while the second switch is off. The popup
 hides it at once, with no reload. A hidden switch keeps its stored
 value.
 
@@ -271,8 +284,10 @@ gates the back path only.
 `src/back.js` read the current values from `src/settings.js`. The user
 does not need to reload the page.
 
-If `storage.local` holds no value for a key, the extension uses
-`true`. Only an explicit `false` turns a key off.
+If `storage.local` holds no value for a key, the extension uses the
+default. Only an explicit `false` turns a switch off. A value of
+`minimumSeconds` that is not a number, or is below zero, falls back to
+`5`. So the rule always has a number.
 
 ## 9. Testing
 
@@ -310,7 +325,10 @@ Then check these cases by hand:
 | Open a video from a playlist, click the channel name | The extension does nothing. |
 | Turn the toggle off, click the channel name | No miniplayer. The video stops. |
 | Turn the main toggle off | The back row disappears from the popup. |
-| Watch a video, press the back button | The previous page loads. The video keeps playing in the miniplayer. |
+| Watch a video for 10 seconds, press the back button | The previous page loads. The video keeps playing in the miniplayer. |
+| Open a video and press the back button within 5 seconds | No miniplayer. The video stops. |
+| Set the field to 0, open a video, press back at once | The miniplayer opens. |
+| Turn the back switch off | The seconds field disappears from the popup. |
 | Press the back button a second time | No change to the video. The page moves back one more step. |
 | Turn the back toggle off, press the back button | No miniplayer. The video stops. |
 | Watch a video from a queue, press the back button | The extension does nothing. |

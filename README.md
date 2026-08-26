@@ -25,15 +25,22 @@ Firefox removes a temporary add-on when it closes.
 
 ## Turn the extension on or off
 
-Select the toolbar button. The popup shows two switches.
+Select the toolbar button. The popup shows two switches and one field.
 
-| Switch                  | Effect                                                           | Default |
-| ----------------------- | ---------------------------------------------------------------- | ------- |
-| Automatic miniplayer    | The video moves to the miniplayer when you switch to a different |
-| page                    | On                                                               |
-| Also on the back button | The video moves to the miniplayer when you press the back button | On      |
+| Control                          | Effect                                                                       | Default |
+| -------------------------------- | ---------------------------------------------------------------------------- | ------- |
+| Automatic miniplayer             | The video moves to the miniplayer when you switch to a different page        | On      |
+| Also on the back button          | The video moves to the miniplayer when you press the back button             | On      |
+| Only after N seconds on the page | The back button acts only when you stayed on the watch page longer than N    | 5       |
 
-The first switch gates both behaviors. The second switch appears only
+The first switch gates every behavior. The second switch appears only
+while the first switch is on. The seconds field appears only while the
+second switch is on.
+
+The seconds rule applies to the back button only. A link click opens
+the miniplayer at once. A value of 0 turns the minimum off.
+
+A change applies at once. You do not need to reload the page.
 
 ## Run the tests
 

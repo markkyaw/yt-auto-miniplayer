@@ -34,6 +34,8 @@
       enabled: settings.isEnabled(),
       backEnabled: settings.isBackEnabled(),
       videoPlaying: isVideoPlaying(),
+      secondsOnPage: root.YtAmp.watchTimer.secondsOnWatchPage(),
+      minimumSeconds: settings.getMinimumSeconds(),
       destinationPath: path,
       queueOpen: page.isQueueOpen(),
       miniplayerOpen: page.isMiniplayerOpen()

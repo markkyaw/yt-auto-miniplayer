@@ -36,6 +36,17 @@
                 margin-top: 12px;
                 padding-left: 18px;
             }
+            #seconds-row {
+                margin-top: 8px;
+                padding-left: 24px;
+            }
+            #seconds-row label {
+                font-size: 12px;
+                color: #444;
+            }
+            #seconds {
+                width: 56px;
+            }
         </style>
     </head>
     <body>
@@ -54,6 +65,13 @@
                 <span>Also on the back button</span>
             </label>
             <p>The back button keeps the video alive in the miniplayer</p>
+            <div id="seconds-row">
+                <label>
+                    <span>Only after</span>
+                    <input type="number" id="seconds" min="0" step="1" />
+                    <span>seconds on the page</span>
+                </label>
+            </div>
         </div>
         <script src="src/settings.js"></script>
         <script src="src/popup.js"></script>

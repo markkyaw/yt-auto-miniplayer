@@ -4,7 +4,8 @@
   // Every key the module owns, with its default value.
   const DEFAULTS = {
     enabled: true,
-    backOpensMiniplayer: true
+    backOpensMiniplayer: true,
+    minimumSeconds: 5
   };
   const NAMES = Object.keys(DEFAULTS);
   const cached = Object.assign({}, DEFAULTS);
@@ -15,9 +16,17 @@
     return root.browser || root.chrome;
   }
 
-  // Only an explicit false turns a key off.
+  // Only an explicit false turns a switch off. A broken number
+  // falls back to the default, so the rule always has one.
+  function coerce(name, value) {
+    if (typeof DEFAULTS[name] !== 'number') return value !== false;
+    const number = Number(value);
+    if (!Number.isFinite(number) || number < 0) return DEFAULTS[name];
+    return number;
+  }
+
   function cache(name, value) {
-    cached[name] = value !== false;
+    cached[name] = coerce(name, value);
     return cached[name];
   }
 
@@ -31,6 +40,10 @@
 
   function isBackEnabled() {
     return cached.backOpensMiniplayer;
+  }
+
+  function getMinimumSeconds() {
+    return cached.minimumSeconds;
   }
 
   async function load() {
@@ -73,6 +86,7 @@
     DEFAULTS: DEFAULTS,
     isEnabled: isEnabled,
     isBackEnabled: isBackEnabled,
+    getMinimumSeconds: getMinimumSeconds,
     load: load,
     save: save,
     watch: watch

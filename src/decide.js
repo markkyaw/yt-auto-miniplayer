@@ -22,12 +22,20 @@
     return true;
   }
 
+  // A short visit is a glance. The video is not worth a miniplayer.
+  function isLongEnough(seconds, minimum) {
+    if (typeof seconds !== 'number') return false;
+    if (typeof minimum !== 'number') return false;
+    return seconds > minimum;
+  }
+
   // Returns true when the back navigation must open the miniplayer.
   function shouldOpenMiniplayerOnBack(state) {
     if (!state) return false;
     if (!state.enabled) return false;
     if (!state.backEnabled) return false;
     if (!state.videoPlaying) return false;
+    if (!isLongEnough(state.secondsOnPage, state.minimumSeconds)) return false;
     if (isBlockedPath(state.destinationPath)) return false;
     if (state.queueOpen) return false;
     if (state.miniplayerOpen) return false;
@@ -38,4 +46,5 @@
   root.YtAmp.shouldOpenMiniplayer = shouldOpenMiniplayer;
   root.YtAmp.shouldOpenMiniplayerOnBack = shouldOpenMiniplayerOnBack;
   root.YtAmp.isBlockedPath = isBlockedPath;
+  root.YtAmp.isLongEnough = isLongEnough;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

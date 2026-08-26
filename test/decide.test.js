@@ -82,7 +82,9 @@ function backState(changes) {
     videoPlaying: true,
     destinationPath: '/feed/subscriptions',
     queueOpen: false,
-    miniplayerOpen: false
+    miniplayerOpen: false,
+    secondsOnPage: 6,
+    minimumSeconds: 5
   }, changes);
 }
 
@@ -125,4 +127,30 @@ test('back: the state is missing', () => {
 
 test('back: the home page is a good destination', () => {
   assert.strictEqual(shouldOpenMiniplayerOnBack(backState({ destinationPath: '/' })), true);
+});
+
+// A short visit is a glance. The video is not worth a miniplayer.
+test('back: the visit is shorter than the minimum', () => {
+  assert.strictEqual(
+    shouldOpenMiniplayerOnBack(backState({ secondsOnPage: 4.9 })), false);
+});
+
+test('back: the visit is exactly the minimum', () => {
+  assert.strictEqual(
+    shouldOpenMiniplayerOnBack(backState({ secondsOnPage: 5 })), false);
+});
+
+test('back: a longer minimum blocks a visit that passed the default', () => {
+  assert.strictEqual(
+    shouldOpenMiniplayerOnBack(backState({ minimumSeconds: 30 })), false);
+});
+
+test('back: a minimum of zero lets every visit pass', () => {
+  assert.strictEqual(shouldOpenMiniplayerOnBack(
+    backState({ minimumSeconds: 0, secondsOnPage: 0.2 })), true);
+});
+
+test('back: the seconds are missing', () => {
+  assert.strictEqual(
+    shouldOpenMiniplayerOnBack(backState({ secondsOnPage: undefined })), false);
 });
