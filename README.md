@@ -45,6 +45,22 @@ node --test
 
 The tests need no installation. The project has no dependency.
 
+## The icon
+
+`icons/icon.svg` is the source. The manifest points to the four PNG
+files next to it, because Chrome does not accept an SVG icon.
+
+To build the PNG files again after a change to the SVG:
+
+```
+qlmanage -t -s 512 -o icons icons/icon.svg
+for s in 16 32 48 128; do
+  cp icons/icon.svg.png icons/icon-$s.png
+  sips -z $s $s icons/icon-$s.png
+done
+rm icons/icon.svg.png
+```
+
 ## Repair a broken selector
 
 YouTube can change its page at any time. Every selector is in
