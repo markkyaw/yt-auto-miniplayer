@@ -56,6 +56,15 @@ the user's click.
 | `src/settings.js` | Reads and writes the toggle in `storage.local`. |
 | `popup.html`, `src/popup.js` | The toolbar toggle. |
 | `manifest.json` | The extension manifest. |
+| `test/decide.test.js` | The unit tests for `src/decide.js`. |
+
+The manifest loads the content scripts in this order: `src/decide.js`,
+`src/youtube-page.js`, `src/settings.js`, `src/content.js`. Each file
+adds one property to the global object `YtAmp`.
+
+The extension calls the browser through one alias:
+`const api = globalThis.browser || globalThis.chrome;`. Firefox and
+Chrome both return promises for `storage.local` in Manifest version 3.
 
 `src/youtube-page.js` is the only file that breaks when YouTube changes
 its DOM. All selectors live there.
@@ -78,10 +87,22 @@ If one test fails, the extension does nothing.
 
 ### 5.1 The decision function
 
+A content script cannot use `import`. Manifest V3 does not support ES
+modules in a content script. The manifest lists each file in order.
+Each file attaches its exports to one global object.
+
 ```js
-// decide.js
-export function shouldOpenMiniplayer(state) { /* returns true or false */ }
+// src/decide.js
+(function (root) {
+  function shouldOpenMiniplayer(state) { /* returns true or false */ }
+  root.YtAmp = root.YtAmp || {};
+  root.YtAmp.shouldOpenMiniplayer = shouldOpenMiniplayer;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
 ```
+
+Node can load the same file. The test file loads it with `require`,
+then reads `globalThis.YtAmp.shouldOpenMiniplayer`. The project needs
+no build step.
 
 `state` holds these fields:
 
@@ -135,9 +156,12 @@ The toolbar button opens a small popup. The popup shows one switch.
 The switch writes `{ enabled: true }` or `{ enabled: false }` to
 `storage.local`. The default value is `true`.
 
-`content.js` reads the value at start. It also listens to
-`storage.onChanged`, so a change applies at once. The user does not
-need to reload the page.
+`src/settings.js` reads the value at start. It also listens to
+`storage.onChanged`, so a change applies at once. `src/content.js`
+reads the current value from `src/settings.js`. The user does not need
+to reload the page.
+
+If `storage.local` holds no value, the extension uses `true`.
 
 ## 9. Testing
 
@@ -145,9 +169,14 @@ need to reload the page.
 
 `node --test` runs the tests for `src/decide.js`. The tests cover:
 
-- All seven conditions are true. The result is `true`.
-- Each condition is false in turn. The result is `false` each time.
-- The destination path is `/watch`. The result is `false`.
+- All conditions pass. The result is `true`.
+- `enabled` is false. The result is `false`.
+- `onWatchPage` is false. The result is `false`.
+- `hasLink` is false. The result is `false`.
+- `sameHost` is false. The result is `false`.
+- `destinationPath` is `/watch`. The result is `false`.
+- `queueOpen` is true. The result is `false`.
+- `miniplayerOpen` is true. The result is `false`.
 
 The tests come first. The code comes after.
 
