@@ -46,7 +46,10 @@ A second probe on 2026-08-26 measured the back navigation.
 The extension is a content script only. It has no background script.
 
 - Manifest version 3. One manifest serves both browsers.
-- Host match: `*://*.youtube.com/*`.
+- Host match: `*://www.youtube.com/*` and `*://youtube.com/*`.
+  The pattern leaves out every other subdomain, so the content
+  script never runs on `music.youtube.com`, `m.youtube.com`, or
+  `studio.youtube.com`.
 - Permission: `storage`. The toggle needs it. Nothing else.
 - Firefox needs `browser_specific_settings.gecko.id`. Chrome ignores
   that key.
@@ -299,8 +302,10 @@ the proof.
 - A second `i` key while the miniplayer holds the video expands the
   miniplayer and stops the video. The `miniplayerOpen` signal blocks
   that case. The signal must stay correct.
-- Shorts, embeds, and YouTube Music have no miniplayer. The key event
-  has no effect there. The extension reports no error.
+- Shorts and embeds have no miniplayer. The key event has no effect
+  there. The extension reports no error.
+- The extension does not run on YouTube Music. The match pattern
+  leaves that subdomain out.
 - YouTube can change its DOM at any time. All selectors live in
   `src/youtube-page.js` for a fast repair.
 

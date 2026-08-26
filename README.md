@@ -45,6 +45,12 @@ node --test
 
 The tests need no installation. The project has no dependency.
 
+## Where the extension runs
+
+The content script runs on `www.youtube.com` and `youtube.com` only.
+It does not run on `music.youtube.com`, `m.youtube.com`, or
+`studio.youtube.com`.
+
 ## The icon
 
 The manifest names five square PNG files in `icons/`: 16, 32, 48, 64,

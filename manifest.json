@@ -16,7 +16,8 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*.youtube.com/*"
+        "*://www.youtube.com/*",
+        "*://youtube.com/*"
       ],
       "js": [
         "src/decide.js",
