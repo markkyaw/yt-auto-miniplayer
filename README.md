@@ -54,7 +54,9 @@ It does not run on `music.youtube.com`, `m.youtube.com`, or
 ## The icon
 
 The manifest names four square PNG files in `icons/`: 16, 32, 48, and
-128 pixels.
+128 pixels. `icons/yt_auto_pip.svg` is the same artwork in vector
+form. The manifest does not name it, because Chrome does not accept an
+SVG icon.
 
 ## Repair a broken selector
 
