@@ -47,19 +47,11 @@ The tests need no installation. The project has no dependency.
 
 ## The icon
 
-`icons/icon.svg` is the source. The manifest points to the four PNG
-files next to it, because Chrome does not accept an SVG icon.
+`icons/icon.png` is the icon the manifest names. `icons/icon.svg` is
+the same artwork in vector form.
 
-To build the PNG files again after a change to the SVG:
-
-```
-qlmanage -t -s 512 -o icons icons/icon.svg
-for s in 16 32 48 128; do
-  cp icons/icon.svg.png icons/icon-$s.png
-  sips -z $s $s icons/icon-$s.png
-done
-rm icons/icon.svg.png
-```
+The PNG is 398 x 278 pixels. The browser scales it into a square slot,
+so the toolbar shows it with space above and below.
 
 ## Repair a broken selector
 
