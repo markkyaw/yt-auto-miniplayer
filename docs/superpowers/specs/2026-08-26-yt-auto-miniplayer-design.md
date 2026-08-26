@@ -78,10 +78,11 @@ The extension sends the `i` key when all of these are true:
 1. The toggle is on.
 2. The current path is `/watch`.
 3. The click landed on a link with an `href`.
-4. The link points to the same host.
-5. The destination path is not `/watch`.
-6. The queue panel is closed.
-7. The miniplayer is not open.
+4. The click is a plain left click. See section 5.4.
+5. The link points to the same host.
+6. The destination path is not `/watch` and not `/shorts/...`.
+7. The queue panel is closed.
+8. The miniplayer is not open.
 
 If one test fails, the extension does nothing.
 
@@ -111,10 +112,26 @@ no build step.
 | `enabled` | boolean | The toolbar toggle. |
 | `onWatchPage` | boolean | The current path is `/watch`. |
 | `hasLink` | boolean | The click hit a link with an `href`. |
+| `plainClick` | boolean | A plain left click. See section 5.4. |
 | `sameHost` | boolean | The link points to the current host. |
 | `destinationPath` | string | The path of the link. |
 | `queueOpen` | boolean | A queue or a playlist is active. |
 | `miniplayerOpen` | boolean | The miniplayer is open now. |
+
+### 5.4 The plain click test
+
+A modifier click or a middle click opens a new tab. The current tab
+does not navigate. The extension must stay silent in that case.
+
+`plainClick` is true only when all of these are true:
+
+- `event.button === 0`
+- `event.ctrlKey`, `event.metaKey`, `event.shiftKey`, and
+  `event.altKey` are all false
+- The link has no `target="_blank"`
+
+Without this test the extension minimizes the video that the user
+wanted to keep. That result is worse than no extension.
 
 ### 5.2 Page state signals
 
@@ -167,7 +184,9 @@ If `storage.local` holds no value, the extension uses `true`.
 
 ### 9.1 Unit tests
 
-`node --test` runs the tests for `src/decide.js`. The tests cover:
+`node --test test/` runs the tests for `src/decide.js`. The test file
+loads the code with `require`. The project has no `package.json`, so
+Node treats the files as CommonJS. The tests cover:
 
 - All conditions pass. The result is `true`.
 - `enabled` is false. The result is `false`.
@@ -190,6 +209,9 @@ Then check these cases by hand:
 | Watch a video, click the channel name | The miniplayer opens. The channel page loads. |
 | Watch a video, click the YouTube logo | The miniplayer opens. The home page loads. |
 | Watch a video, click a different video | No miniplayer. YouTube plays the new video. |
+| Watch a video, Cmd+click or middle-click a link | The video keeps playing full size. A new tab opens. |
+| Watch a video, click a Short | Record the result. One audio track only. |
+| Open a video in a fresh tab, then click the channel name | Record the result. The `i` key has no earlier page. |
 | Add two videos to the queue, click the channel name | The extension does nothing. YouTube opens its own miniplayer. |
 | Open a video from a playlist, click the channel name | The extension does nothing. |
 | Turn the toggle off, click the channel name | No miniplayer. The video stops. |
@@ -203,10 +225,12 @@ the proof.
 - The extension covers link clicks only. The back button, the forward
   button, and a typed URL are not covered. A full page load stops the
   video. No extension can prevent that.
-- The `i` key makes YouTube navigate back one step first. The history
-  gains one entry: the watch page, the earlier page, then the
-  destination. The implementation must record the back-button result
-  and report it.
+- The `i` key makes YouTube navigate back one step first. This changes
+  the back button. Today the back button returns the user to the
+  video. With the extension the back button probably returns the user
+  to the page before the video. The video still plays in the
+  miniplayer, so nothing stops. The implementation must record the
+  exact result and report it.
 - Shorts, embeds, and YouTube Music have no miniplayer. The key event
   has no effect there. The extension reports no error.
 - YouTube can change its DOM at any time. All selectors live in
