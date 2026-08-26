@@ -8,6 +8,7 @@ function fakeElement(options) {
     href: opts.href || '',
     target: opts.target || '',
     offsetParent: opts.offsetParent === undefined ? {} : opts.offsetParent,
+    paused: opts.paused === undefined ? true : opts.paused,
     attributes: opts.attributes || {},
     hasAttribute(name) {
       return Object.prototype.hasOwnProperty.call(this.attributes, name);
@@ -18,6 +19,12 @@ function fakeElement(options) {
     },
     getBoundingClientRect() {
       return { width: opts.width === undefined ? 320 : opts.width };
+    },
+    // The stub answers only the selectors the test names.
+    closest(selector) {
+      const map = opts.closest || {};
+      return Object.prototype.hasOwnProperty.call(map, selector)
+        ? map[selector] : null;
     }
   };
 }
@@ -30,6 +37,7 @@ function installPage(options) {
   const pathname = opts.pathname === undefined ? '/watch' : opts.pathname;
   const keyEvents = [];
   const listeners = [];
+  const windowListeners = [];
 
   define('location', {
     pathname: pathname,
@@ -53,7 +61,14 @@ function installPage(options) {
     Object.assign(this, init || {});
     this.type = type;
   });
-  return { keyEvents: keyEvents, listeners: listeners };
+  define('addEventListener', function (type, handler, capture) {
+    windowListeners.push({ type: type, handler: handler, capture: capture });
+  });
+  return {
+    keyEvents: keyEvents,
+    listeners: listeners,
+    windowListeners: windowListeners
+  };
 }
 
 // Replaces a global, even when the runtime defines it already.

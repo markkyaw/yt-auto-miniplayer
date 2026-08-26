@@ -29,6 +29,18 @@ design depends on them.
 | `yt-navigate-start` at the capture phase | `location` still holds the old URL. |
 | Press `i`, then let the click navigate | The user lands on the clicked page. The miniplayer stays open. |
 
+A second probe on 2026-08-26 measured the back navigation.
+
+| Fact | Result |
+|---|---|
+| `popstate` on a back navigation | Fires about 16 ms before `yt-navigate-start`. `location` already holds the destination. |
+| The player at `popstate` | Still alive and playing. YouTube resets it to `t=0` and paused about 140 ms later. |
+| Synthetic `i` inside the `popstate` handler | The video keeps playing. 5 clean trials out of 5. |
+| `history.length` across the back press and the `i` key | Never changes. The `i` key costs no history entry. |
+| `ytd-miniplayer` when the miniplayer is open | `position: fixed`, so `offsetParent` is always `null`. |
+| The video element when the miniplayer is open | `video.closest('ytd-miniplayer')` returns the miniplayer. |
+| A second `i` key while the miniplayer holds the video | YouTube expands the miniplayer, pushes a history entry, and resets the video. |
+
 ## 3. Architecture
 
 The extension is a content script only. It has no background script.
@@ -53,14 +65,16 @@ the user's click.
 | `src/youtube-page.js` | Holds every YouTube selector. Reads the page state. Sends the key event. |
 | `src/decide.js` | One pure function. State in, boolean out. No DOM. |
 | `src/content.js` | Reads the click. Builds the state. Calls `decide`. Calls the page module. |
-| `src/settings.js` | Reads and writes the toggle in `storage.local`. |
-| `popup.html`, `src/popup.js` | The toolbar toggle. |
+| `src/back.js` | Reads the back navigation. Builds the state. Calls `decide`. Calls the page module. |
+| `src/settings.js` | Reads and writes the two toggles in `storage.local`. |
+| `popup.html`, `src/popup.js`, `src/popup-main.js` | The two toolbar toggles. |
 | `manifest.json` | The extension manifest. |
-| `test/decide.test.js` | The unit tests for `src/decide.js`. |
+| `test/*.test.js` | The unit tests, one file per module. |
 
 The manifest loads the content scripts in this order: `src/decide.js`,
-`src/youtube-page.js`, `src/settings.js`, `src/content.js`. Each file
-adds one property to the global object `YtAmp`.
+`src/youtube-page.js`, `src/settings.js`, `src/back.js`,
+`src/content.js`, `src/main.js`. Each file adds one property to the
+global object `YtAmp`.
 
 The extension calls the browser through one alias:
 `const api = globalThis.browser || globalThis.chrome;`. Firefox and
@@ -139,13 +153,40 @@ wanted to keep. That result is worse than no extension.
 |---|---|
 | `onWatchPage` | `location.pathname === '/watch'` |
 | `queueOpen` | `#playlist.ytd-watch-flexy` exists and has no `hidden` attribute |
-| `miniplayerOpen` | `ytd-miniplayer` exists, `offsetParent` is not null, and the width is more than 0 |
+| `miniplayerOpen` | `video.closest('ytd-miniplayer')` returns an element |
+| `videoPlaying` | A `video` element exists and `paused` is `false` |
+
+The miniplayer uses `position: fixed`. A fixed element always reports
+`offsetParent === null`, so a visibility test on `ytd-miniplayer` fails
+for a miniplayer that is open. The test asks where the video sits.
 
 ### 5.4 The action
 
 The page module sends three events to `document`: `keydown`,
 `keypress`, and `keyup`. Each event uses `key: 'i'`, `code: 'KeyI'`,
 `keyCode: 73`, `bubbles: true`, `cancelable: true`, `composed: true`.
+
+### 5.5 The back navigation rule
+
+A back press gives no hook that still sees the watch page. `popstate`
+runs after `location` moves. The player stays alive for about 140 ms
+more, so the handler acts inside that window.
+
+`shouldOpenMiniplayerOnBack(state)` returns `true` when all of these
+are true:
+
+1. The main toggle is on.
+2. The back toggle is on.
+3. A video plays.
+4. The destination path is not `/watch` and not a Short.
+5. No queue or playlist is open.
+6. The miniplayer does not hold the video already.
+
+Rule 6 carries the feature. A second `i` key expands the miniplayer,
+pushes a history entry, and stops the video.
+
+The handler keeps no state between navigations. Every signal comes
+from the page at `popstate` time.
 
 ## 6. Data flow
 
@@ -158,6 +199,17 @@ The page module sends three events to `document`: `keydown`,
 7. The click continues. YouTube navigates to the destination.
 8. The miniplayer stays open and the video plays.
 
+The back navigation follows a second path:
+
+1. The user presses the back button on a watch page.
+2. The capture-phase `popstate` listener runs. `location` already
+   holds the destination.
+3. `back.js` reads the page state from `youtube-page.js`.
+4. `back.js` calls `shouldOpenMiniplayerOnBack(state)`.
+5. If the answer is `true`, `youtube-page.js` sends the key events.
+6. YouTube renders the destination page. The video keeps playing in
+   the miniplayer.
+
 ## 7. Error handling
 
 The whole listener body sits in a `try`/`catch`. The `catch` block
@@ -166,19 +218,29 @@ ignores the error. The extension must never block a navigation.
 If a selector finds no element, the state field is `false`. The rule
 then fails and the extension does nothing.
 
-## 8. The toggle
+## 8. The toggles
 
-The toolbar button opens a small popup. The popup shows one switch.
+The toolbar button opens a small popup. The popup shows two switches.
 
-The switch writes `{ enabled: true }` or `{ enabled: false }` to
-`storage.local`. The default value is `true`.
+| Key in `storage.local` | Switch | Default |
+|---|---|---|
+| `enabled` | Automatic miniplayer | `true` |
+| `backOpensMiniplayer` | Also on the back button | `true` |
 
-`src/settings.js` reads the value at start. It also listens to
-`storage.onChanged`, so a change applies at once. `src/content.js`
-reads the current value from `src/settings.js`. The user does not need
-to reload the page.
+The second switch is hidden while the first switch is off. The popup
+hides it at once, with no reload. A hidden switch keeps its stored
+value.
 
-If `storage.local` holds no value, the extension uses `true`.
+The `enabled` key gates both paths. The `backOpensMiniplayer` key
+gates the back path only.
+
+`src/settings.js` reads both keys at start. It also listens to
+`storage.onChanged`, so a change applies at once. `src/content.js` and
+`src/back.js` read the current values from `src/settings.js`. The user
+does not need to reload the page.
+
+If `storage.local` holds no value for a key, the extension uses
+`true`. Only an explicit `false` turns a key off.
 
 ## 9. Testing
 
@@ -215,22 +277,28 @@ Then check these cases by hand:
 | Add two videos to the queue, click the channel name | The extension does nothing. YouTube opens its own miniplayer. |
 | Open a video from a playlist, click the channel name | The extension does nothing. |
 | Turn the toggle off, click the channel name | No miniplayer. The video stops. |
-| Press the back button after a navigation | Record the result. See section 10. |
+| Turn the main toggle off | The back row disappears from the popup. |
+| Watch a video, press the back button | The previous page loads. The video keeps playing in the miniplayer. |
+| Press the back button a second time | No change to the video. The page moves back one more step. |
+| Turn the back toggle off, press the back button | No miniplayer. The video stops. |
+| Watch a video from a queue, press the back button | The extension does nothing. |
 
 A mocked DOM cannot prove that the extension works. The manual test is
 the proof.
 
 ## 10. Known limits
 
-- The extension covers link clicks only. The back button, the forward
-  button, and a typed URL are not covered. A full page load stops the
+- The extension covers link clicks and the back button. The forward
+  button and a typed URL are not covered. A full page load stops the
   video. No extension can prevent that.
-- The `i` key makes YouTube navigate back one step first. This changes
-  the back button. Today the back button returns the user to the
-  video. With the extension the back button probably returns the user
-  to the page before the video. The video still plays in the
-  miniplayer, so nothing stops. The implementation must record the
-  exact result and report it.
+- The `i` key costs no history entry. It replaces the current entry.
+  So the back path needs no history correction.
+- One trial in five showed a flash of an earlier page about 150 ms
+  after the back press. The correct page then loaded. The effect is
+  cosmetic.
+- A second `i` key while the miniplayer holds the video expands the
+  miniplayer and stops the video. The `miniplayerOpen` signal blocks
+  that case. The signal must stay correct.
 - Shorts, embeds, and YouTube Music have no miniplayer. The key event
   has no effect there. The extension reports no error.
 - YouTube can change its DOM at any time. All selectors live in
@@ -241,6 +309,6 @@ the proof.
 - Chrome packaging and the Chrome Web Store listing. The code supports
   Chrome. The release does not.
 - An options page with rules per page type.
-- Support for the back button and the forward button.
+- Support for the forward button.
 - A change to the behavior when the user arrives at a watch page. The
   extension acts in one direction only.

@@ -3,14 +3,19 @@
   "name": "YT Auto Miniplayer",
   "version": "0.1.0",
   "description": "Opens the YouTube miniplayer when you leave a watch page.",
-  "permissions": ["storage"],
+  "permissions": [
+    "storage"
+  ],
   "content_scripts": [
     {
-      "matches": ["*://*.youtube.com/*"],
+      "matches": [
+        "*://*.youtube.com/*"
+      ],
       "js": [
         "src/decide.js",
         "src/youtube-page.js",
         "src/settings.js",
+        "src/back.js",
         "src/content.js",
         "src/main.js"
       ],

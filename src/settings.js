@@ -1,54 +1,78 @@
 (function (root) {
   'use strict';
 
-  const KEY = 'enabled';
-  const DEFAULT = true;
-  let cached = DEFAULT;
+  // Every key the module owns, with its default value.
+  const DEFAULTS = {
+    enabled: true,
+    backOpensMiniplayer: true
+  };
+  const NAMES = Object.keys(DEFAULTS);
+  const cached = Object.assign({}, DEFAULTS);
+  let listener = null;
 
   // Firefox and Chrome both answer with promises in Manifest version 3.
   function api() {
     return root.browser || root.chrome;
   }
 
-  // Only an explicit false turns the extension off.
-  function cache(value) {
-    cached = value !== false;
-    return cached;
+  // Only an explicit false turns a key off.
+  function cache(name, value) {
+    cached[name] = value !== false;
+    return cached[name];
+  }
+
+  function owns(name) {
+    return Object.prototype.hasOwnProperty.call(DEFAULTS, name);
   }
 
   function isEnabled() {
-    return cached;
+    return cached.enabled;
+  }
+
+  function isBackEnabled() {
+    return cached.backOpensMiniplayer;
   }
 
   async function load() {
+    let stored = null;
     try {
-      const result = await api().storage.local.get(KEY);
-      return cache(result ? result[KEY] : DEFAULT);
+      stored = await api().storage.local.get(NAMES);
     } catch (error) {
-      return cache(DEFAULT);
+      stored = null;
     }
+    NAMES.forEach(function (name) {
+      cache(name, stored ? stored[name] : DEFAULTS[name]);
+    });
+    return Object.assign({}, cached);
   }
 
-  async function save(value) {
-    cache(value);
+  async function save(name, value) {
+    if (!owns(name)) return;
+    cache(name, value);
     const values = {};
-    values[KEY] = cached;
+    values[name] = cached[name];
     await api().storage.local.set(values);
   }
 
+  // Two modules call watch(). One listener keeps the cache current.
   function watch() {
-    api().storage.onChanged.addListener(function (changes, area) {
+    const events = api().storage.onChanged;
+    if (listener) events.removeListener(listener);
+    listener = function (changes, area) {
       if (area !== 'local') return;
-      if (!changes || !changes[KEY]) return;
-      cache(changes[KEY].newValue);
-    });
+      if (!changes) return;
+      NAMES.forEach(function (name) {
+        if (changes[name]) cache(name, changes[name].newValue);
+      });
+    };
+    events.addListener(listener);
   }
 
   root.YtAmp = root.YtAmp || {};
   root.YtAmp.settings = {
-    KEY: KEY,
-    DEFAULT: DEFAULT,
+    DEFAULTS: DEFAULTS,
     isEnabled: isEnabled,
+    isBackEnabled: isBackEnabled,
     load: load,
     save: save,
     watch: watch

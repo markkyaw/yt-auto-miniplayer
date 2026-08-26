@@ -38,30 +38,30 @@ test('isQueueOpen is true when the panel shows', () => {
   assert.strictEqual(page.isQueueOpen(), true);
 });
 
-test('isMiniplayerOpen is false when the element is missing', () => {
+test('isMiniplayerOpen is false when the video is missing', () => {
   installPage({});
   assert.strictEqual(page.isMiniplayerOpen(), false);
 });
 
-test('isMiniplayerOpen is false when the element has no offsetParent', () => {
+test('isMiniplayerOpen is false when the video sits outside the miniplayer', () => {
   installPage({
     bySelector: {
-      [page.SELECTORS.miniplayer]: fakeElement({ offsetParent: null })
+      [page.SELECTORS.video]: fakeElement({ tagName: 'VIDEO', closest: {} })
     }
   });
   assert.strictEqual(page.isMiniplayerOpen(), false);
 });
 
-test('isMiniplayerOpen is false when the width is zero', () => {
+// The real miniplayer uses position: fixed, so offsetParent is null.
+test('isMiniplayerOpen is true when the video sits in a fixed miniplayer', () => {
+  const mini = fakeElement({ tagName: 'YTD-MINIPLAYER', offsetParent: null });
   installPage({
-    bySelector: { [page.SELECTORS.miniplayer]: fakeElement({ width: 0 }) }
-  });
-  assert.strictEqual(page.isMiniplayerOpen(), false);
-});
-
-test('isMiniplayerOpen is true when the element shows', () => {
-  installPage({
-    bySelector: { [page.SELECTORS.miniplayer]: fakeElement({ width: 320 }) }
+    bySelector: {
+      [page.SELECTORS.video]: fakeElement({
+        tagName: 'VIDEO',
+        closest: { [page.SELECTORS.miniplayer]: mini }
+      })
+    }
   });
   assert.strictEqual(page.isMiniplayerOpen(), true);
 });

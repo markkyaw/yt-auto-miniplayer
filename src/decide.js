@@ -22,7 +22,20 @@
     return true;
   }
 
+  // Returns true when the back navigation must open the miniplayer.
+  function shouldOpenMiniplayerOnBack(state) {
+    if (!state) return false;
+    if (!state.enabled) return false;
+    if (!state.backEnabled) return false;
+    if (!state.videoPlaying) return false;
+    if (isBlockedPath(state.destinationPath)) return false;
+    if (state.queueOpen) return false;
+    if (state.miniplayerOpen) return false;
+    return true;
+  }
+
   root.YtAmp = root.YtAmp || {};
   root.YtAmp.shouldOpenMiniplayer = shouldOpenMiniplayer;
+  root.YtAmp.shouldOpenMiniplayerOnBack = shouldOpenMiniplayerOnBack;
   root.YtAmp.isBlockedPath = isBlockedPath;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

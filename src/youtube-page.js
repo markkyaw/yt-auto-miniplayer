@@ -4,7 +4,8 @@
   // YouTube can change these at any time. Repair them here.
   const SELECTORS = {
     queuePanel: '#playlist.ytd-watch-flexy',
-    miniplayer: 'ytd-miniplayer'
+    miniplayer: 'ytd-miniplayer',
+    video: 'video'
   };
 
   const KEY_TYPES = ['keydown', 'keypress', 'keyup'];
@@ -19,12 +20,11 @@
     return !!panel && !panel.hasAttribute('hidden');
   }
 
-  // The element always exists. Visibility is the real signal.
+  // The miniplayer is fixed, so offsetParent is null. Ask where the video is.
   function isMiniplayerOpen() {
-    const mini = root.document.querySelector(SELECTORS.miniplayer);
-    if (!mini) return false;
-    if (mini.offsetParent === null) return false;
-    return mini.getBoundingClientRect().width > 0;
+    const video = root.document.querySelector(SELECTORS.video);
+    if (!video || typeof video.closest !== 'function') return false;
+    return !!video.closest(SELECTORS.miniplayer);
   }
 
   // YouTube opens the miniplayer for the i key.
