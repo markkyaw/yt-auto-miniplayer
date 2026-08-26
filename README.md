@@ -53,9 +53,8 @@ It does not run on `music.youtube.com`, `m.youtube.com`, or
 
 ## The icon
 
-The manifest names five square PNG files in `icons/`: 16, 32, 48, 64,
-and 128 pixels. `icons/yt_pip_icon.svg` is the same artwork in vector
-form.
+The manifest names four square PNG files in `icons/`: 16, 32, 48, and
+128 pixels.
 
 ## Repair a broken selector
 
