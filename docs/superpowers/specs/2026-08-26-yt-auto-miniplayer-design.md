@@ -78,7 +78,7 @@ The extension sends the `i` key when all of these are true:
 1. The toggle is on.
 2. The current path is `/watch`.
 3. The click landed on a link with an `href`.
-4. The click is a plain left click. See section 5.4.
+4. The click is a plain left click. See section 5.2.
 5. The link points to the same host.
 6. The destination path is not `/watch` and not `/shorts/...`.
 7. The queue panel is closed.
@@ -112,13 +112,13 @@ no build step.
 | `enabled` | boolean | The toolbar toggle. |
 | `onWatchPage` | boolean | The current path is `/watch`. |
 | `hasLink` | boolean | The click hit a link with an `href`. |
-| `plainClick` | boolean | A plain left click. See section 5.4. |
+| `plainClick` | boolean | A plain left click. See section 5.2. |
 | `sameHost` | boolean | The link points to the current host. |
 | `destinationPath` | string | The path of the link. |
 | `queueOpen` | boolean | A queue or a playlist is active. |
 | `miniplayerOpen` | boolean | The miniplayer is open now. |
 
-### 5.4 The plain click test
+### 5.2 The plain click test
 
 A modifier click or a middle click opens a new tab. The current tab
 does not navigate. The extension must stay silent in that case.
@@ -133,7 +133,7 @@ does not navigate. The extension must stay silent in that case.
 Without this test the extension minimizes the video that the user
 wanted to keep. That result is worse than no extension.
 
-### 5.2 Page state signals
+### 5.3 Page state signals
 
 | Signal | Test |
 |---|---|
@@ -141,7 +141,7 @@ wanted to keep. That result is worse than no extension.
 | `queueOpen` | `#playlist.ytd-watch-flexy` exists and has no `hidden` attribute |
 | `miniplayerOpen` | `ytd-miniplayer` exists, `offsetParent` is not null, and the width is more than 0 |
 
-### 5.3 The action
+### 5.4 The action
 
 The page module sends three events to `document`: `keydown`,
 `keypress`, and `keyup`. Each event uses `key: 'i'`, `code: 'KeyI'`,
