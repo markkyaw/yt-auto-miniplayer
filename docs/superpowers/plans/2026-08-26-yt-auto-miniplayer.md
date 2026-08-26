@@ -20,7 +20,10 @@
 - Manifest version 3. One `manifest.json` serves Firefox and Chrome.
 - Permission list: `storage` only.
 - Host match: `*://*.youtube.com/*`.
-- Run the tests with `node --test test/`.
+- Run the tests with `node --test`. Node 25 cannot take a directory
+  argument, and bare `node --test` runs every file under `test/`.
+- The shared stubs live in `support/helpers.js`, not in `test/`. A file
+  inside `test/` runs as a test file.
 
 ## File Structure
 
@@ -34,7 +37,7 @@
 | `popup.html` | The toolbar popup markup. |
 | `src/popup.js` | The toolbar toggle behavior. |
 | `manifest.json` | The extension manifest. |
-| `test/helpers.js` | Stub `document`, `location`, `KeyboardEvent`, and `storage`. |
+| `support/helpers.js` | Stub `document`, `location`, `KeyboardEvent`, and `storage`. |
 | `test/*.test.js` | The unit tests. |
 | `README.md` | How to load and test the extension. |
 
@@ -148,7 +151,7 @@ test('the home page is a good destination', () => {
 
 - [ ] **Step 3: Run the test and confirm that it fails**
 
-Run: `node --test test/`
+Run: `node --test`
 Expected: FAIL. The message says that `src/decide.js` does not exist.
 
 - [ ] **Step 4: Write the code**
@@ -188,7 +191,7 @@ Create `src/decide.js`:
 
 - [ ] **Step 5: Run the test and confirm that it passes**
 
-Run: `node --test test/`
+Run: `node --test`
 Expected: PASS. 13 tests pass.
 
 - [ ] **Step 6: Commit**
@@ -203,7 +206,7 @@ git commit -m "Add the miniplayer decision rule"
 ### Task 2: The YouTube page module
 
 **Files:**
-- Create: `test/helpers.js`
+- Create: `support/helpers.js`
 - Create: `src/youtube-page.js`
 - Test: `test/youtube-page.test.js`
 
@@ -215,12 +218,13 @@ git commit -m "Add the miniplayer decision rule"
   - `isQueueOpen() -> boolean`
   - `isMiniplayerOpen() -> boolean`
   - `openMiniplayer() -> undefined`
-- Also produces `test/helpers.js` with `fakeElement(options)` and
-  `installPage(options) -> Array`. Later tasks use both.
+- Also produces `support/helpers.js` with `fakeElement(options)`,
+  `installPage(options)`, and `define(name, value)`. Later tasks use all
+  three. `installPage` returns `{ keyEvents, listeners }`.
 
 - [ ] **Step 1: Write the test helpers**
 
-Create `test/helpers.js`:
+Create `support/helpers.js`:
 
 ```js
 'use strict';
@@ -247,13 +251,14 @@ function fakeElement(options) {
   };
 }
 
-// Installs a stub document, location, and KeyboardEvent. Returns sent events.
+// Installs a stub document, location, and KeyboardEvent.
 function installPage(options) {
   const opts = options || {};
   const bySelector = opts.bySelector || {};
   const host = opts.host || 'www.youtube.com';
   const pathname = opts.pathname === undefined ? '/watch' : opts.pathname;
-  const sent = [];
+  const keyEvents = [];
+  const listeners = [];
 
   define('location', {
     pathname: pathname,
@@ -266,16 +271,18 @@ function installPage(options) {
       return bySelector[selector] || null;
     },
     dispatchEvent(event) {
-      sent.push(event);
+      keyEvents.push(event);
       return true;
     },
-    addEventListener() {}
+    addEventListener(type, handler, capture) {
+      listeners.push({ type: type, handler: handler, capture: capture });
+    }
   });
   define('KeyboardEvent', function (type, init) {
     Object.assign(this, init || {});
     this.type = type;
   });
-  return sent;
+  return { keyEvents: keyEvents, listeners: listeners };
 }
 
 // Replaces a global, even when the runtime defines it already.
@@ -297,7 +304,7 @@ Create `test/youtube-page.test.js`:
 
 const test = require('node:test');
 const assert = require('node:assert');
-const { fakeElement, installPage } = require('./helpers.js');
+const { fakeElement, installPage } = require('../support/helpers.js');
 
 require('../src/youtube-page.js');
 const page = globalThis.YtAmp.page;
@@ -362,8 +369,9 @@ test('isMiniplayerOpen is true when the element shows', () => {
 });
 
 test('openMiniplayer sends three key events for the i key', () => {
-  const sent = installPage({});
+  const dom = installPage({});
   page.openMiniplayer();
+  const sent = dom.keyEvents;
   assert.deepStrictEqual(sent.map((event) => event.type),
     ['keydown', 'keypress', 'keyup']);
   sent.forEach((event) => {
@@ -380,7 +388,7 @@ test('openMiniplayer sends three key events for the i key', () => {
 
 - [ ] **Step 3: Run the test and confirm that it fails**
 
-Run: `node --test test/`
+Run: `node --test`
 Expected: FAIL. The message says that `src/youtube-page.js` does not exist.
 
 - [ ] **Step 4: Write the code**
@@ -445,13 +453,13 @@ Create `src/youtube-page.js`:
 
 - [ ] **Step 5: Run the test and confirm that it passes**
 
-Run: `node --test test/`
+Run: `node --test`
 Expected: PASS. All tests from Task 1 and Task 2 pass.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/youtube-page.js test/youtube-page.test.js test/helpers.js
+git add src/youtube-page.js test/youtube-page.test.js support/helpers.js
 git commit -m "Add the YouTube page module and the test helpers"
 ```
 
@@ -464,7 +472,7 @@ git commit -m "Add the YouTube page module and the test helpers"
 - Test: `test/settings.test.js`
 
 **Interfaces:**
-- Consumes: `test/helpers.js` `define(name, value)` from Task 2.
+- Consumes: `support/helpers.js` `define(name, value)` from Task 2.
 - Produces: `globalThis.YtAmp.settings`, an object with these members:
   - `KEY` — the string `'enabled'`.
   - `DEFAULT` — the boolean `true`.
@@ -482,7 +490,7 @@ Create `test/settings.test.js`:
 
 const test = require('node:test');
 const assert = require('node:assert');
-const { define } = require('./helpers.js');
+const { define } = require('../support/helpers.js');
 
 require('../src/settings.js');
 const settings = globalThis.YtAmp.settings;
@@ -563,7 +571,7 @@ test('watch ignores another key', async () => {
 
 - [ ] **Step 2: Run the test and confirm that it fails**
 
-Run: `node --test test/`
+Run: `node --test`
 Expected: FAIL. The message says that `src/settings.js` does not exist.
 
 - [ ] **Step 3: Write the code**
@@ -631,7 +639,7 @@ Create `src/settings.js`:
 
 - [ ] **Step 4: Run the test and confirm that it passes**
 
-Run: `node --test test/`
+Run: `node --test`
 Expected: PASS. All tests pass.
 
 - [ ] **Step 5: Commit**
@@ -658,7 +666,9 @@ git commit -m "Add the settings module for the toolbar toggle"
   - `isPlainClick(event, link) -> boolean`
   - `buildState(event) -> object` — the state that Task 1 consumes.
   - `handleClick(event) -> undefined` — never throws.
-  - `start() -> undefined` — subscribes and loads the settings.
+  - `start() -> undefined` — subscribes to the settings, loads them, then
+    arms the click listener. The listener must not arm before the load
+    resolves. Otherwise an off toggle acts as on for a short time.
 
 `src/main.js` calls `YtAmp.content.start()`. It holds no other code, so
 the tests can load `src/content.js` without a side effect.
@@ -672,7 +682,7 @@ Create `test/content.test.js`:
 
 const test = require('node:test');
 const assert = require('node:assert');
-const { fakeElement, installPage, define } = require('./helpers.js');
+const { fakeElement, installPage, define } = require('../support/helpers.js');
 
 require('../src/decide.js');
 require('../src/content.js');
@@ -795,6 +805,22 @@ test('handleClick stays silent for another watch page', () => {
   assert.strictEqual(opened.count, 0);
 });
 
+test('start arms the click listener only after the settings load', async () => {
+  const dom = installPage({});
+  installModules({});
+  let finishLoad;
+  globalThis.YtAmp.settings.load = function () {
+    return new Promise(function (resolve) { finishLoad = resolve; });
+  };
+  content.start();
+  assert.strictEqual(dom.listeners.length, 0);
+  finishLoad(true);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.strictEqual(dom.listeners.length, 1);
+  assert.strictEqual(dom.listeners[0].type, 'click');
+  assert.strictEqual(dom.listeners[0].capture, true);
+});
+
 test('handleClick never throws', () => {
   installPage({});
   installModules({});
@@ -807,7 +833,7 @@ test('handleClick never throws', () => {
 
 - [ ] **Step 2: Run the test and confirm that it fails**
 
-Run: `node --test test/`
+Run: `node --test`
 Expected: FAIL. The message says that `src/content.js` does not exist.
 
 - [ ] **Step 3: Write the content script**
@@ -874,10 +900,12 @@ Create `src/content.js`:
     }
   }
 
+  // Arm the listener after the settings load. An off toggle must stay off.
   function start() {
     root.YtAmp.settings.watch();
-    root.YtAmp.settings.load();
-    root.document.addEventListener('click', handleClick, true);
+    root.YtAmp.settings.load().then(function () {
+      root.document.addEventListener('click', handleClick, true);
+    });
   }
 
   root.YtAmp = root.YtAmp || {};
@@ -902,7 +930,7 @@ globalThis.YtAmp.content.start();
 
 - [ ] **Step 5: Run the test and confirm that it passes**
 
-Run: `node --test test/`
+Run: `node --test`
 Expected: PASS. All tests pass.
 
 - [ ] **Step 6: Commit**
@@ -1041,7 +1069,7 @@ Expected: `all 6 files exist`
 
 - [ ] **Step 6: Run the tests again**
 
-Run: `node --test test/`
+Run: `node --test`
 Expected: PASS. The new files break nothing.
 
 - [ ] **Step 7: Commit**
@@ -1103,7 +1131,7 @@ change applies at once. You do not need to reload the page.
 ## Run the tests
 
 ```
-node --test test/
+node --test
 ```
 
 The tests need no installation. The project has no dependency.
@@ -1142,9 +1170,10 @@ Give the user the three steps from the README. Wait for the report.
 
 - [ ] **Step 4: Record the two open results in the spec**
 
-Replace the "Record the result" text in section 10 of the spec with the
-real behavior that the user reported. If a Short plays two audio tracks,
-open a new task to close the miniplayer first.
+The phrase "Record the result" is in the section 9.2 table. Section 10
+holds the sentence "must record the exact result and report it". Replace
+both with the real behavior that the user reported. If a Short plays two
+audio tracks, open a new task to close the miniplayer first.
 
 - [ ] **Step 5: Commit**
 
@@ -1153,7 +1182,10 @@ git add README.md docs/superpowers/specs/2026-08-26-yt-auto-miniplayer-design.md
 git commit -m "Add the README and record the manual test results"
 ```
 
-- [ ] **Step 6: Push the branch**
+- [ ] **Step 6: Ask the user, then push**
+
+Ask the user for permission to push. The remote is public. Push only
+after the user agrees.
 
 ```bash
 git push -u origin main
