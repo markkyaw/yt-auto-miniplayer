@@ -58,7 +58,7 @@
   `sameHost` (boolean), `destinationPath` (string), `queueOpen` (boolean),
   `miniplayerOpen` (boolean).
 
-- [ ] **Step 1: Create the ignore file**
+- [x] **Step 1: Create the ignore file**
 
 ```bash
 cat > .gitignore <<'EOF'
@@ -69,7 +69,7 @@ node_modules/
 EOF
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Create `test/decide.test.js`:
 
@@ -149,12 +149,12 @@ test('the home page is a good destination', () => {
 });
 ```
 
-- [ ] **Step 3: Run the test and confirm that it fails**
+- [x] **Step 3: Run the test and confirm that it fails**
 
 Run: `node --test`
 Expected: FAIL. The message says that `src/decide.js` does not exist.
 
-- [ ] **Step 4: Write the code**
+- [x] **Step 4: Write the code**
 
 Create `src/decide.js`:
 
@@ -189,12 +189,12 @@ Create `src/decide.js`:
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 ```
 
-- [ ] **Step 5: Run the test and confirm that it passes**
+- [x] **Step 5: Run the test and confirm that it passes**
 
 Run: `node --test`
 Expected: PASS. 13 tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add .gitignore src/decide.js test/decide.test.js
@@ -222,7 +222,7 @@ git commit -m "Add the miniplayer decision rule"
   `installPage(options)`, and `define(name, value)`. Later tasks use all
   three. `installPage` returns `{ keyEvents, listeners }`.
 
-- [ ] **Step 1: Write the test helpers**
+- [x] **Step 1: Write the test helpers**
 
 Create `support/helpers.js`:
 
@@ -295,7 +295,7 @@ function define(name, value) {
 module.exports = { fakeElement, installPage, define };
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Create `test/youtube-page.test.js`:
 
@@ -386,12 +386,12 @@ test('openMiniplayer sends three key events for the i key', () => {
 });
 ```
 
-- [ ] **Step 3: Run the test and confirm that it fails**
+- [x] **Step 3: Run the test and confirm that it fails**
 
 Run: `node --test`
 Expected: FAIL. The message says that `src/youtube-page.js` does not exist.
 
-- [ ] **Step 4: Write the code**
+- [x] **Step 4: Write the code**
 
 Create `src/youtube-page.js`:
 
@@ -451,12 +451,12 @@ Create `src/youtube-page.js`:
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 ```
 
-- [ ] **Step 5: Run the test and confirm that it passes**
+- [x] **Step 5: Run the test and confirm that it passes**
 
 Run: `node --test`
 Expected: PASS. All tests from Task 1 and Task 2 pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/youtube-page.js test/youtube-page.test.js support/helpers.js
@@ -481,7 +481,7 @@ git commit -m "Add the YouTube page module and the test helpers"
   - `save(value) -> Promise<undefined>` — writes `storage.local`.
   - `watch() -> undefined` — subscribes to `storage.onChanged`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/settings.test.js`:
 
@@ -569,12 +569,12 @@ test('watch ignores another key', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the test and confirm that it fails**
+- [x] **Step 2: Run the test and confirm that it fails**
 
 Run: `node --test`
 Expected: FAIL. The message says that `src/settings.js` does not exist.
 
-- [ ] **Step 3: Write the code**
+- [x] **Step 3: Write the code**
 
 Create `src/settings.js`:
 
@@ -637,12 +637,12 @@ Create `src/settings.js`:
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 ```
 
-- [ ] **Step 4: Run the test and confirm that it passes**
+- [x] **Step 4: Run the test and confirm that it passes**
 
 Run: `node --test`
 Expected: PASS. All tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/settings.js test/settings.test.js
@@ -673,7 +673,7 @@ git commit -m "Add the settings module for the toolbar toggle"
 `src/main.js` calls `YtAmp.content.start()`. It holds no other code, so
 the tests can load `src/content.js` without a side effect.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/content.test.js`:
 
@@ -831,12 +831,12 @@ test('handleClick never throws', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test and confirm that it fails**
+- [x] **Step 2: Run the test and confirm that it fails**
 
 Run: `node --test`
 Expected: FAIL. The message says that `src/content.js` does not exist.
 
-- [ ] **Step 3: Write the content script**
+- [x] **Step 3: Write the content script**
 
 Create `src/content.js`:
 
@@ -919,7 +919,7 @@ Create `src/content.js`:
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 ```
 
-- [ ] **Step 4: Write the start file**
+- [x] **Step 4: Write the start file**
 
 Create `src/main.js`:
 
@@ -928,12 +928,12 @@ Create `src/main.js`:
 globalThis.YtAmp.content.start();
 ```
 
-- [ ] **Step 5: Run the test and confirm that it passes**
+- [x] **Step 5: Run the test and confirm that it passes**
 
 Run: `node --test`
 Expected: PASS. All tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/content.js src/main.js test/content.test.js
@@ -954,7 +954,7 @@ git commit -m "Add the content script that joins the click to the rule"
   Tasks 1, 2, 3, and 4.
 - Produces: a loadable extension. Task 6 tests it by hand.
 
-- [ ] **Step 1: Write the manifest**
+- [x] **Step 1: Write the manifest**
 
 Create `manifest.json`:
 
@@ -992,7 +992,7 @@ Create `manifest.json`:
 }
 ```
 
-- [ ] **Step 2: Write the popup markup**
+- [x] **Step 2: Write the popup markup**
 
 Create `popup.html`:
 
@@ -1027,7 +1027,7 @@ Create `popup.html`:
 </html>
 ```
 
-- [ ] **Step 3: Write the popup behavior**
+- [x] **Step 3: Write the popup behavior**
 
 Create `src/popup.js`:
 
@@ -1048,12 +1048,12 @@ Create `src/popup.js`:
 })();
 ```
 
-- [ ] **Step 4: Confirm that the manifest is valid JSON**
+- [x] **Step 4: Confirm that the manifest is valid JSON**
 
 Run: `node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8')); console.log('manifest is valid')"`
 Expected: `manifest is valid`
 
-- [ ] **Step 5: Confirm that every manifest file exists**
+- [x] **Step 5: Confirm that every manifest file exists**
 
 Run:
 ```bash
@@ -1067,12 +1067,12 @@ console.log('all ' + files.length + ' files exist');
 ```
 Expected: `all 6 files exist`
 
-- [ ] **Step 6: Run the tests again**
+- [x] **Step 6: Run the tests again**
 
 Run: `node --test`
 Expected: PASS. The new files break nothing.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add manifest.json popup.html src/popup.js
@@ -1096,7 +1096,7 @@ git commit -m "Add the manifest and the toolbar toggle"
 Ask the user to run each case and to report the result. Do not claim a
 pass that the user did not report.
 
-- [ ] **Step 1: Write the README**
+- [x] **Step 1: Write the README**
 
 Create `README.md`:
 
