@@ -45,6 +45,25 @@ node --test
 
 The tests need no installation. The project has no dependency.
 
+## Build the file to upload
+
+```
+./tools/package.sh
+```
+
+The script runs the unit tests, checks that every file the manifest
+names exists, and writes `dist/yt-auto-miniplayer-<version>.zip`. The
+version comes from `manifest.json`.
+
+The ZIP file holds `manifest.json` at the top level, with `src/`,
+`icons/`, and `popup.html`. It leaves out `docs/`, `test/`,
+`support/`, `tools/`, and the git data.
+
+Upload the same file to both stores:
+
+- Firefox: addons.mozilla.org → Submit a New Add-on.
+- Chrome: the Developer Dashboard → Add new item.
+
 ## Where the extension runs
 
 The content script runs on `www.youtube.com` and `youtube.com` only.

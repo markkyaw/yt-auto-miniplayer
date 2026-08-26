@@ -2,3 +2,4 @@ node_modules/
 *.zip
 *.xpi
 .DS_Store
+dist/
