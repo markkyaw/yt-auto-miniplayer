@@ -11,10 +11,11 @@ already keeps the video alive in that case.
 
 ## Demo
 
-[![The extension in use](docs/media/demo-poster.png)](docs/media/demo.mp4)
+![The extension in use](docs/media/demo.gif)
 
-Select the picture to play the video. GitHub does not play a video
-inside a README file, so the picture opens the file.
+The picture above is a GIF file, so it plays inside this page. It is
+720 pixels wide at 10 frames each second, and it holds no sound.
+[The MP4 file](docs/media/demo.mp4) holds the full quality.
 
 ## Install in Firefox for a test
 
