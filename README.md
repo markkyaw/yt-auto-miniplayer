@@ -9,6 +9,13 @@ button on a watch page.
 The extension stays silent when a queue or a playlist is active. YouTube
 already keeps the video alive in that case.
 
+## Demo
+
+[![The extension in use](docs/media/demo-poster.png)](docs/media/demo.mp4)
+
+Select the picture to play the video. GitHub does not play a video
+inside a README file, so the picture opens the file.
+
 ## Install in Firefox for a test
 
 1. Open `about:debugging#/runtime/this-firefox`.
