@@ -15,7 +15,7 @@ the ZIP file, then load it by hand.
 
 1. Open the
    [Releases page](https://github.com/markkyaw/yt-auto-miniplayer/releases/latest).
-2. Download `yt-auto-miniplayer-<version>.zip` from **Assets**.
+2. Download the latest `.zip` from **Assets**.
 
 ### Firefox
 
