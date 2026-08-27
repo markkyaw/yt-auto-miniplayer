@@ -8,19 +8,38 @@ A Firefox and Chrome extension. It opens the YouTube miniplayer when you navigat
 
 [The MP4 file of demo](docs/media/demo.mp4)
 
-## Install in Firefox for a test
+## Install the release
+
+The extension is not in the Firefox or the Chrome store yet. Download
+the ZIP file, then load it by hand.
+
+1. Open the
+   [Releases page](https://github.com/markkyaw/yt-auto-miniplayer/releases/latest).
+2. Download `yt-auto-miniplayer-<version>.zip` from **Assets**.
+
+### Firefox
 
 1. Open `about:debugging#/runtime/this-firefox`.
 2. Select **Load Temporary Add-on**.
-3. Select the `manifest.json` file in this folder.
+3. Select the ZIP file. You do not need to open it first.
 
-Firefox removes a temporary add-on when it closes.
+Firefox removes a temporary add-on when it closes. Load it again after
+each restart.
 
-## Install in Chrome for a test
+### Chrome
 
-1. Open `chrome://extensions`.
-2. Turn on **Developer mode**.
-3. Select **Load unpacked**, then select this folder.
+1. Open the ZIP file. It makes a folder that holds `manifest.json`.
+2. Open `chrome://extensions`.
+3. Turn on **Developer mode**.
+4. Select **Load unpacked**, then select that folder.
+
+Chrome keeps the extension after a restart. Keep the folder in place.
+Chrome reads it at every start.
+
+## Install from the source
+
+Clone the repository, then follow the steps above. Give Firefox the
+`manifest.json` file in this folder, and give Chrome this folder.
 
 ## Turn the extension on or off
 
@@ -57,13 +76,14 @@ The tests need no installation. The project has no dependency.
 
 The script runs the unit tests, checks that every file the manifest
 names exists, and writes `dist/yt-auto-miniplayer-<version>.zip`. The
-version comes from `manifest.json`.
+version comes from `manifest.json`. That ZIP file is the one to attach
+to a GitHub release.
 
 The ZIP file holds `manifest.json` at the top level, with `src/`,
 `icons/`, and `popup.html`. It leaves out `docs/`, `test/`,
 `support/`, `tools/`, and the git data.
 
-Upload the same file to both stores:
+Upload the same file to a GitHub release, and later to both stores:
 
 - Firefox: addons.mozilla.org → Submit a New Add-on.
 - Chrome: the Developer Dashboard → Add new item.
