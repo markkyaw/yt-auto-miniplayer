@@ -64,6 +64,10 @@ The extension is a content script only. It has no background script.
 - Permission: `storage`. The toggle needs it. Nothing else.
 - Firefox needs `browser_specific_settings.gecko.id`. Chrome ignores
   that key.
+- addons.mozilla.org needs
+  `browser_specific_settings.gecko.data_collection_permissions`. The
+  value is `{ "required": ["none"] }`. The extension collects no data.
+  It keeps three settings in `storage.local` and sends nothing.
 
 The trigger is a capture-phase `click` listener on `document`. The
 listener runs before any navigation. The clicked link carries the
