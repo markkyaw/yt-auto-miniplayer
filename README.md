@@ -13,6 +13,8 @@ A Firefox and Chrome extension. It opens the YouTube miniplayer when you navigat
 The extension is not in the Firefox or the Chrome store yet. Download
 the ZIP file, then load it by hand.
 
+It needs Firefox 140, Firefox for Android 142, or Chrome 88.
+
 1. Open the
    [Releases page](https://github.com/markkyaw/yt-auto-miniplayer/releases/latest).
 2. Download the latest `.zip` from **Assets**.

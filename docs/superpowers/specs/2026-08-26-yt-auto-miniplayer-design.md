@@ -68,6 +68,8 @@ The extension is a content script only. It has no background script.
   `browser_specific_settings.gecko.data_collection_permissions`. The
   value is `{ "required": ["none"] }`. The extension collects no data.
   It keeps three settings in `storage.local` and sends nothing.
+- Firefox 140 added that key, and Firefox for Android 142 added it. So
+  `strict_min_version` is `140.0`, and `gecko_android` holds `142.0`.
 
 The trigger is a capture-phase `click` listener on `document`. The
 listener runs before any navigation. The clicked link carries the
