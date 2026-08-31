@@ -31,6 +31,16 @@
     });
   }
 
+  // Only the magnifier starts a search. A click on the text field
+  // moves the cursor, and it must change nothing.
+  function isSearchButton(event) {
+    if (typeof event.composedPath !== 'function') return false;
+    if (!isInSearchBox(event)) return false;
+    return event.composedPath().some(function (node) {
+      return !!node && node.tagName === 'BUTTON';
+    });
+  }
+
   function isSearchTrigger(event) {
     if (event.key !== 'Enter') return false;
     if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return false;
@@ -77,7 +87,7 @@
   function handleClick(event) {
     try {
       // The magnifier is a button in the search box, not a link.
-      if (isInSearchBox(event)) {
+      if (isSearchButton(event)) {
         if (root.YtAmp.shouldOpenMiniplayerOnSearch(buildSearchState())) {
           root.YtAmp.page.openMiniplayer();
         }
@@ -116,6 +126,7 @@
   root.YtAmp.content = {
     findLink: findLink,
     isInSearchBox: isInSearchBox,
+    isSearchButton: isSearchButton,
     isSearchTrigger: isSearchTrigger,
     buildSearchState: buildSearchState,
     handleKeyDown: handleKeyDown,

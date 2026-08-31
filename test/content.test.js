@@ -247,9 +247,23 @@ test('handleClick opens the miniplayer for the magnifier button', () => {
   installPage({});
   const opened = installModules({});
   const event = clickEvent({ link: null });
-  event.composedPath = function () { return [fakeElement({}), searchElement()]; };
+  event.composedPath = function () {
+    return [fakeElement({ tagName: 'BUTTON' }), searchElement()];
+  };
   content.handleClick(event);
   assert.strictEqual(opened.count, 1);
+});
+
+// A click on the text field only puts the cursor in the box.
+test('handleClick stays silent for a click on the search field', () => {
+  installPage({});
+  const opened = installModules({});
+  const event = clickEvent({ link: null });
+  event.composedPath = function () {
+    return [fakeElement({ tagName: 'TEXTAREA' }), searchElement()];
+  };
+  content.handleClick(event);
+  assert.strictEqual(opened.count, 0);
 });
 
 test('start arms the key listener as well as the click listener', async () => {

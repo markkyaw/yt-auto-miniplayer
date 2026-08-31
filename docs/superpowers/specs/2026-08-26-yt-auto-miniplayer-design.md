@@ -236,7 +236,8 @@ The search box is a `TEXTAREA` inside a form, and the form sits in
 `yt-searchbox`. YouTube handles the Enter key and the magnifier button
 in JavaScript, and it fires **no** `submit` event. So the extension
 reads the `keydown` event at the capture phase, and it reads a click
-inside `yt-searchbox`.
+on a `BUTTON` inside `yt-searchbox`. A click on the text field only
+moves the cursor, so a click alone is not enough.
 
 `shouldOpenMiniplayerOnSearch(state)` returns `true` when all of these
 are true:
