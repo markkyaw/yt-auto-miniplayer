@@ -42,9 +42,22 @@
     return true;
   }
 
+  // Returns true when a search must open the miniplayer. A search
+  // leaves the watch page, and its destination is never a watch page.
+  function shouldOpenMiniplayerOnSearch(state) {
+    if (!state) return false;
+    if (!state.enabled) return false;
+    if (!state.onWatchPage) return false;
+    if (state.queueOpen) return false;
+    if (state.miniplayerOpen) return false;
+    if (state.recentlyActed) return false;
+    return true;
+  }
+
   root.YtAmp = root.YtAmp || {};
   root.YtAmp.shouldOpenMiniplayer = shouldOpenMiniplayer;
   root.YtAmp.shouldOpenMiniplayerOnBack = shouldOpenMiniplayerOnBack;
+  root.YtAmp.shouldOpenMiniplayerOnSearch = shouldOpenMiniplayerOnSearch;
   root.YtAmp.isBlockedPath = isBlockedPath;
   root.YtAmp.isLongEnough = isLongEnough;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -13,9 +13,11 @@ function installModules(options) {
   const opts = options || {};
   const opened = { count: 0 };
   globalThis.YtAmp.page = {
+    SELECTORS: { searchBox: 'yt-searchbox' },
     isWatchPage() { return opts.onWatchPage !== false; },
     isQueueOpen() { return opts.queueOpen === true; },
     isMiniplayerOpen() { return opts.miniplayerOpen === true; },
+    sentKeyRecently() { return opts.sentKeyRecently === true; },
     openMiniplayer() { opened.count += 1; }
   };
   globalThis.YtAmp.settings = {
@@ -136,7 +138,6 @@ test('start arms the click listener only after the settings load', async () => {
   assert.strictEqual(dom.listeners.length, 0);
   finishLoad(true);
   await new Promise((resolve) => setTimeout(resolve, 0));
-  assert.strictEqual(dom.listeners.length, 1);
   assert.strictEqual(dom.listeners[0].type, 'click');
   assert.strictEqual(dom.listeners[0].capture, true);
 });
@@ -148,4 +149,114 @@ test('handleClick never throws', () => {
     throw new Error('YouTube changed the DOM');
   };
   assert.doesNotThrow(() => content.handleClick(clickEvent({})));
+});
+
+// The search box is a form that YouTube handles in JavaScript. It
+// fires no submit event, so the extension reads the Enter key.
+function searchElement() {
+  return fakeElement({ tagName: 'YT-SEARCHBOX', matches: ['yt-searchbox'] });
+}
+
+function keyEvent(options) {
+  const opts = options || {};
+  const path = opts.inSearchBox === false
+    ? [fakeElement({})] : [fakeElement({}), searchElement()];
+  return {
+    key: opts.key === undefined ? 'Enter' : opts.key,
+    ctrlKey: !!opts.ctrlKey,
+    metaKey: !!opts.metaKey,
+    shiftKey: !!opts.shiftKey,
+    altKey: !!opts.altKey,
+    composedPath() { return path; }
+  };
+}
+
+test('isSearchTrigger is true for Enter inside the search box', () => {
+  installPage({});
+  installModules({});
+  assert.strictEqual(content.isSearchTrigger(keyEvent({})), true);
+});
+
+test('isSearchTrigger is false for Enter outside the search box', () => {
+  installPage({});
+  installModules({});
+  assert.strictEqual(
+    content.isSearchTrigger(keyEvent({ inSearchBox: false })), false);
+});
+
+test('isSearchTrigger is false for another key', () => {
+  installPage({});
+  installModules({});
+  assert.strictEqual(content.isSearchTrigger(keyEvent({ key: 'a' })), false);
+});
+
+test('isSearchTrigger is false for Shift and Enter', () => {
+  installPage({});
+  installModules({});
+  assert.strictEqual(
+    content.isSearchTrigger(keyEvent({ shiftKey: true })), false);
+});
+
+test('handleKeyDown opens the miniplayer for a search', () => {
+  installPage({});
+  const opened = installModules({});
+  content.handleKeyDown(keyEvent({}));
+  assert.strictEqual(opened.count, 1);
+});
+
+test('handleKeyDown stays silent away from a watch page', () => {
+  installPage({});
+  const opened = installModules({ onWatchPage: false });
+  content.handleKeyDown(keyEvent({}));
+  assert.strictEqual(opened.count, 0);
+});
+
+test('handleKeyDown stays silent when the toggle is off', () => {
+  installPage({});
+  const opened = installModules({ enabled: false });
+  content.handleKeyDown(keyEvent({}));
+  assert.strictEqual(opened.count, 0);
+});
+
+test('handleKeyDown stays silent when a queue is open', () => {
+  installPage({});
+  const opened = installModules({ queueOpen: true });
+  content.handleKeyDown(keyEvent({}));
+  assert.strictEqual(opened.count, 0);
+});
+
+// A held Enter key repeats. One press is enough.
+test('handleKeyDown stays silent right after the extension acted', () => {
+  installPage({});
+  const opened = installModules({ sentKeyRecently: true });
+  content.handleKeyDown(keyEvent({}));
+  assert.strictEqual(opened.count, 0);
+});
+
+test('handleKeyDown never throws', () => {
+  installPage({});
+  installModules({});
+  globalThis.YtAmp.page.isQueueOpen = function () {
+    throw new Error('YouTube changed the DOM');
+  };
+  assert.doesNotThrow(() => content.handleKeyDown(keyEvent({})));
+});
+
+// The magnifier is a button inside the same box, not a link.
+test('handleClick opens the miniplayer for the magnifier button', () => {
+  installPage({});
+  const opened = installModules({});
+  const event = clickEvent({ link: null });
+  event.composedPath = function () { return [fakeElement({}), searchElement()]; };
+  content.handleClick(event);
+  assert.strictEqual(opened.count, 1);
+});
+
+test('start arms the key listener as well as the click listener', async () => {
+  const dom = installPage({});
+  installModules({});
+  content.start();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.deepStrictEqual(dom.listeners.map((one) => one.type), ['click', 'keydown']);
+  assert.strictEqual(dom.listeners[1].capture, true);
 });

@@ -175,6 +175,7 @@ wanted to keep. That result is worse than no extension.
 | `onWatchPage` | `location.pathname === '/watch'` |
 | `queueOpen` | `#playlist.ytd-watch-flexy` exists and has no `hidden` attribute |
 | `miniplayerOpen` | `video.closest('ytd-miniplayer')` returns an element |
+| `recentlyActed` | The extension sent the `i` key less than 1500 ms ago |
 | `videoPlaying` | A `video` element exists and `paused` is `false` |
 | `secondsOnPage` | The seconds since the current watch page opened |
 
@@ -228,6 +229,37 @@ pushes a history entry, and stops the video.
 
 The handler keeps no state between navigations. Every signal comes
 from the page at `popstate` time.
+
+### 5.6 The search rule
+
+The search box is a `TEXTAREA` inside a form, and the form sits in
+`yt-searchbox`. YouTube handles the Enter key and the magnifier button
+in JavaScript, and it fires **no** `submit` event. So the extension
+reads the `keydown` event at the capture phase, and it reads a click
+inside `yt-searchbox`.
+
+`shouldOpenMiniplayerOnSearch(state)` returns `true` when all of these
+are true:
+
+1. The main toggle is on.
+2. The current path is `/watch`.
+3. No queue or playlist is open.
+4. The miniplayer does not hold the video already.
+5. The extension did not send the `i` key in the last 1500 ms.
+
+Rule 5 stops a key repeat. A held Enter key fires `keydown` many
+times.
+
+The destination is always the results page, so the rule needs no path
+test.
+
+**The `navigate` event is the wrong hook here.** A probe on 2026-08-30
+proved it. The `i` key starts its own navigation to the page behind
+the video. At `keydown` time, YouTube has not started anything, so the
+miniplayer transition finishes and the search runs after it. Inside a
+`navigate` event of type `push`, YouTube has already started its
+navigation, and the navigation from `i` wins. The user then lands on
+the wrong page with a playing video and no miniplayer.
 
 ## 6. Data flow
 
@@ -323,6 +355,8 @@ Then check these cases by hand:
 |---|---|
 | Watch a video, click the channel name | The miniplayer opens. The channel page loads. |
 | Watch a video, click the YouTube logo | The miniplayer opens. The home page loads. |
+| Watch a video, type a search and press Enter | The miniplayer opens. The results page loads. |
+| Watch a video, type a search and select the magnifier | The miniplayer opens. The results page loads. |
 | Watch a video, click a different video | No miniplayer. YouTube plays the new video. |
 | Watch a video, Cmd+click or middle-click a link | The video keeps playing full size. A new tab opens. |
 | Watch a video, click a Short | Record the result. One audio track only. |
@@ -344,8 +378,8 @@ the proof.
 
 ## 10. Known limits
 
-- The extension covers link clicks and the back button. The forward
-  button and a typed URL are not covered. A full page load stops the
+- The extension covers link clicks, the search box, and the back
+  button. The forward button and a typed URL are not covered. A full page load stops the
   video. No extension can prevent that.
 - The `i` key costs no history entry. It replaces the current entry.
   So the back path needs no history correction.

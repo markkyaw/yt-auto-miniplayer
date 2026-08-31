@@ -82,3 +82,22 @@ test('openMiniplayer sends three key events for the i key', () => {
     assert.strictEqual(event.composed, true);
   });
 });
+
+// The i key makes YouTube navigate. A key repeat must not press it twice.
+test('sentKeyRecently is true right after the key events', () => {
+  installPage({});
+  let clock = 1000;
+  globalThis.Date = { now() { return clock; } };
+  page.openMiniplayer();
+  clock = 1400;
+  assert.strictEqual(page.sentKeyRecently(), true);
+});
+
+test('sentKeyRecently is false again after the guard time', () => {
+  installPage({});
+  let clock = 1000;
+  globalThis.Date = { now() { return clock; } };
+  page.openMiniplayer();
+  clock = 1000 + page.GUARD_MS;
+  assert.strictEqual(page.sentKeyRecently(), false);
+});

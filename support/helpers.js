@@ -21,6 +21,9 @@ function fakeElement(options) {
       return { width: opts.width === undefined ? 320 : opts.width };
     },
     // The stub answers only the selectors the test names.
+    matches(selector) {
+      return (opts.matches || []).indexOf(selector) !== -1;
+    },
     closest(selector) {
       const map = opts.closest || {};
       return Object.prototype.hasOwnProperty.call(map, selector)

@@ -1,6 +1,6 @@
 # YT Auto Miniplayer
 
-A Firefox and Chrome extension. It opens the YouTube miniplayer when you navigate away or press back and keeps playing.
+A Firefox and Chrome extension. It opens the YouTube miniplayer when you navigate away, search, or press back, and the video keeps playing.
 
 ## Demo
 

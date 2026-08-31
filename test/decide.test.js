@@ -154,3 +154,50 @@ test('back: the seconds are missing', () => {
   assert.strictEqual(
     shouldOpenMiniplayerOnBack(backState({ secondsOnPage: undefined })), false);
 });
+
+const shouldOpenMiniplayerOnSearch = globalThis.YtAmp.shouldOpenMiniplayerOnSearch;
+
+// A search leaves the watch page, and it carries no link.
+function searchState(changes) {
+  return Object.assign({
+    enabled: true,
+    onWatchPage: true,
+    queueOpen: false,
+    miniplayerOpen: false,
+    recentlyActed: false
+  }, changes);
+}
+
+test('search: all conditions pass', () => {
+  assert.strictEqual(shouldOpenMiniplayerOnSearch(searchState()), true);
+});
+
+test('search: the toggle is off', () => {
+  assert.strictEqual(
+    shouldOpenMiniplayerOnSearch(searchState({ enabled: false })), false);
+});
+
+test('search: the page is not a watch page', () => {
+  assert.strictEqual(
+    shouldOpenMiniplayerOnSearch(searchState({ onWatchPage: false })), false);
+});
+
+test('search: a queue or a playlist is active', () => {
+  assert.strictEqual(
+    shouldOpenMiniplayerOnSearch(searchState({ queueOpen: true })), false);
+});
+
+test('search: the miniplayer is open', () => {
+  assert.strictEqual(
+    shouldOpenMiniplayerOnSearch(searchState({ miniplayerOpen: true })), false);
+});
+
+// A held Enter key repeats. One press is enough.
+test('search: the extension acted a moment ago', () => {
+  assert.strictEqual(
+    shouldOpenMiniplayerOnSearch(searchState({ recentlyActed: true })), false);
+});
+
+test('search: the state is missing', () => {
+  assert.strictEqual(shouldOpenMiniplayerOnSearch(undefined), false);
+});
