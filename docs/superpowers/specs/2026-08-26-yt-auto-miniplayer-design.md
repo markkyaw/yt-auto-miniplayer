@@ -85,7 +85,7 @@ the user's click.
 | `src/youtube-page.js` | Holds every YouTube selector. Reads the page state. Sends the key event. |
 | `src/decide.js` | One pure function. State in, boolean out. No DOM. |
 | `src/content.js` | Reads the click. Builds the state. Calls `decide`. Calls the page module. |
-| `src/navigate.js` | Reads every navigation away from a watch page. Builds the state. Calls `decide`. Calls the page module. |
+| `src/back.js` | Reads the back navigation. Builds the state. Calls `decide`. Calls the page module. |
 | `src/watch-timer.js` | Counts the seconds on the current watch page. |
 | `src/settings.js` | Reads and writes the two toggles in `storage.local`. |
 | `popup.html`, `src/popup.js`, `src/popup-main.js` | The two toolbar toggles. |
@@ -93,8 +93,8 @@ the user's click.
 | `test/*.test.js` | The unit tests, one file per module. |
 
 The manifest loads the content scripts in this order: `src/decide.js`,
-`src/youtube-page.js`, `src/settings.js`, `src/watch-timer.js`,
-`src/navigate.js`, `src/content.js`, `src/main.js`. Each file adds one property to the
+`src/youtube-page.js`, `src/settings.js`, `src/back.js`,
+`src/content.js`, `src/main.js`. Each file adds one property to the
 global object `YtAmp`.
 
 The extension calls the browser through one alias:
@@ -198,10 +198,8 @@ The choice matters in Chrome. YouTube stops the player inside its own
 `popstate` handler, so a `popstate` listener always arrives too late.
 Firefox stops the player about 140 ms later, so both hooks work there.
 
-`src/navigate.js` uses `popstate` only when the browser has no
-Navigation API. It never arms both hooks. Two hooks would send the `i`
-key twice. Firefox 140 and Chrome both have the Navigation API, so the
-`popstate` path is a fallback that neither browser reaches.
+`src/back.js` uses `popstate` only when the browser has no Navigation
+API. It never arms both hooks. Two hooks would send the `i` key twice.
 
 The `navigate` handler acts only when all of these are true:
 
@@ -230,33 +228,6 @@ pushes a history entry, and stops the video.
 
 The handler keeps no state between navigations. Every signal comes
 from the page at `popstate` time.
-
-### 5.6 The forward navigation rule
-
-A search is not a link click. The user types in the search box and
-presses Enter, so `event.composedPath()` holds no anchor and the click
-handler stays silent. The same is true for every navigation that
-YouTube starts by itself.
-
-The `navigate` event covers all of them. `shouldOpenMiniplayerOnNavigate(state)`
-returns `true` when all of these are true:
-
-1. The main toggle is on.
-2. `location.pathname` is still `/watch`.
-3. The navigation type is `push` or `replace`.
-4. The destination host is the current host.
-5. The destination path is not `/watch` and not a Short.
-6. No queue or playlist is open.
-7. The miniplayer does not hold the video already.
-8. The extension did not send the `i` key in the last 1500 ms.
-
-Rule 8 is the guard. The `i` key makes YouTube push a history entry,
-which fires a second `navigate` event of type `push`. Without the
-guard the handler would press `i` again and stop the video.
-`src/youtube-page.js` holds the guard, so the click path arms it too.
-
-The seconds rule does not apply here. It holds for the back button
-only.
 
 ## 6. Data flow
 
@@ -352,7 +323,6 @@ Then check these cases by hand:
 |---|---|
 | Watch a video, click the channel name | The miniplayer opens. The channel page loads. |
 | Watch a video, click the YouTube logo | The miniplayer opens. The home page loads. |
-| Watch a video, search for something | The miniplayer opens. The results page loads. |
 | Watch a video, click a different video | No miniplayer. YouTube plays the new video. |
 | Watch a video, Cmd+click or middle-click a link | The video keeps playing full size. A new tab opens. |
 | Watch a video, click a Short | Record the result. One audio track only. |
@@ -374,8 +344,8 @@ the proof.
 
 ## 10. Known limits
 
-- The extension covers link clicks, the search box, and the back
-  button. A typed URL is not covered. A full page load stops the
+- The extension covers link clicks and the back button. The forward
+  button and a typed URL are not covered. A full page load stops the
   video. No extension can prevent that.
 - The `i` key costs no history entry. It replaces the current entry.
   So the back path needs no history correction.

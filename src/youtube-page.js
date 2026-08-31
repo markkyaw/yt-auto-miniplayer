@@ -10,11 +10,6 @@
 
   const KEY_TYPES = ['keydown', 'keypress', 'keyup'];
 
-  // The i key makes YouTube navigate. That navigation must not press
-  // the i key again, because a second press stops the video.
-  const GUARD_MS = 1500;
-  let sentAt = null;
-
   function isWatchPage() {
     return root.location.pathname === '/watch';
   }
@@ -32,14 +27,8 @@
     return !!video.closest(SELECTORS.miniplayer);
   }
 
-  function sentKeyRecently() {
-    if (sentAt === null) return false;
-    return root.Date.now() - sentAt < GUARD_MS;
-  }
-
   // YouTube opens the miniplayer for the i key.
   function openMiniplayer() {
-    sentAt = root.Date.now();
     KEY_TYPES.forEach(function (type) {
       root.document.dispatchEvent(new root.KeyboardEvent(type, {
         key: 'i',
@@ -56,8 +45,6 @@
   root.YtAmp = root.YtAmp || {};
   root.YtAmp.page = {
     SELECTORS: SELECTORS,
-    GUARD_MS: GUARD_MS,
-    sentKeyRecently: sentKeyRecently,
     isWatchPage: isWatchPage,
     isQueueOpen: isQueueOpen,
     isMiniplayerOpen: isMiniplayerOpen,

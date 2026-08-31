@@ -23,7 +23,7 @@
         "src/youtube-page.js",
         "src/settings.js",
         "src/watch-timer.js",
-        "src/navigate.js",
+        "src/back.js",
         "src/content.js",
         "src/main.js"
       ],
