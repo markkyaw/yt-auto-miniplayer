@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 # Only these paths go into the ZIP file. Everything else stays out.
-PAYLOAD=(manifest.json popup.html src icons)
+PAYLOAD=(manifest.json popup.html src icons LICENSE)
 
 node --test >/dev/null
 node tools/check-files.js

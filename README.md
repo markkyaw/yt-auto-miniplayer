@@ -82,8 +82,8 @@ version comes from `manifest.json`. That ZIP file is the one to attach
 to a GitHub release.
 
 The ZIP file holds `manifest.json` at the top level, with `src/`,
-`icons/`, and `popup.html`. It leaves out `docs/`, `test/`,
-`support/`, `tools/`, and the git data.
+`icons/`, and `popup.html`. It also holds `LICENSE`. It leaves out
+`docs/`, `test/`, `support/`, `tools/`, and the git data.
 
 Upload the same file to a GitHub release, and later to both stores:
 
@@ -95,3 +95,7 @@ Upload the same file to a GitHub release, and later to both stores:
 The content script runs on `www.youtube.com` and `youtube.com` only.
 It does not run on `music.youtube.com`, `m.youtube.com`, or
 `studio.youtube.com`.
+
+## License
+
+MIT. Read the `LICENSE` file.
