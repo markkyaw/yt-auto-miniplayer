@@ -244,6 +244,22 @@ the class `ytSearchboxComponentClearButton`, and a report button. Only
 the magnifier starts a search. So the rule names the container of the
 magnifier, and it ignores every other button and the text field.
 
+The suggestion list needs a third hook. A probe on 2026-08-30 showed
+that a selection in the list fires `pointerdown` and `mousedown` on
+the row, and then **no** `click`. The list closes first, so the
+`mouseup` lands on the video below. The extension reads `mousedown` at
+the capture phase, and it acts when the path holds
+`.ytSearchboxComponentSuggestionsContainer` and no `BUTTON`. A row can
+hold a Remove button, and that button starts no search.
+
+So the search rule has three triggers:
+
+| Trigger | Event | Test |
+|---|---|---|
+| The Enter key | `keydown` | `key` is `Enter`, no modifier, inside `yt-searchbox` |
+| The magnifier | `click` | Inside `.ytSearchboxComponentActions` |
+| A suggestion | `mousedown` | Inside `.ytSearchboxComponentSuggestionsContainer`, no `BUTTON`, left button |
+
 `shouldOpenMiniplayerOnSearch(state)` returns `true` when all of these
 are true:
 
@@ -363,6 +379,9 @@ Then check these cases by hand:
 | Watch a video, click the YouTube logo | The miniplayer opens. The home page loads. |
 | Watch a video, type a search and press Enter | The miniplayer opens. The results page loads. |
 | Watch a video, type a search and select the magnifier | The miniplayer opens. The results page loads. |
+| Watch a video, type a search and select a suggestion | The miniplayer opens. The results page loads. |
+| Watch a video, type a search and select the X | The query clears. Nothing else changes. |
+| Watch a video, select the search field | Nothing changes. |
 | Watch a video, click a different video | No miniplayer. YouTube plays the new video. |
 | Watch a video, Cmd+click or middle-click a link | The video keeps playing full size. A new tab opens. |
 | Watch a video, click a Short | Record the result. One audio track only. |

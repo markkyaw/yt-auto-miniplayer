@@ -42,6 +42,22 @@
     });
   }
 
+  // The suggestion list closes before the click, so mousedown is the
+  // last event that still holds the suggestion. A row can hold a
+  // Remove button, and that button starts no search.
+  function isSuggestion(event) {
+    if (event.button !== 0) return false;
+    if (typeof event.composedPath !== 'function') return false;
+    const selector = root.YtAmp.page.SELECTORS.searchSuggestion;
+    const path = event.composedPath();
+    if (path.some(function (node) { return !!node && node.tagName === 'BUTTON'; })) {
+      return false;
+    }
+    return path.some(function (node) {
+      return !!node && typeof node.matches === 'function' && node.matches(selector);
+    });
+  }
+
   function isSearchTrigger(event) {
     if (event.key !== 'Enter') return false;
     if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return false;
@@ -89,9 +105,7 @@
     try {
       // The magnifier is a button in the search box, not a link.
       if (isSearchButton(event)) {
-        if (root.YtAmp.shouldOpenMiniplayerOnSearch(buildSearchState())) {
-          root.YtAmp.page.openMiniplayer();
-        }
+        openForSearch();
         return;
       }
       if (root.YtAmp.shouldOpenMiniplayer(buildState(event))) {
@@ -102,15 +116,29 @@
     }
   }
 
+  function openForSearch() {
+    if (root.YtAmp.shouldOpenMiniplayerOnSearch(buildSearchState())) {
+      root.YtAmp.page.openMiniplayer();
+    }
+  }
+
   // This must never throw. A failure must never block the key press.
   function handleKeyDown(event) {
     try {
       if (!isSearchTrigger(event)) return;
-      if (root.YtAmp.shouldOpenMiniplayerOnSearch(buildSearchState())) {
-        root.YtAmp.page.openMiniplayer();
-      }
+      openForSearch();
     } catch (error) {
       // The user's key press is more important than this extension.
+    }
+  }
+
+  // This must never throw. A failure must never block the navigation.
+  function handleMouseDown(event) {
+    try {
+      if (!isSuggestion(event)) return;
+      openForSearch();
+    } catch (error) {
+      // The user's selection is more important than this extension.
     }
   }
 
@@ -120,6 +148,7 @@
     root.YtAmp.settings.load().then(function () {
       root.document.addEventListener('click', handleClick, true);
       root.document.addEventListener('keydown', handleKeyDown, true);
+      root.document.addEventListener('mousedown', handleMouseDown, true);
     });
   }
 
@@ -130,7 +159,9 @@
     isSearchButton: isSearchButton,
     isSearchTrigger: isSearchTrigger,
     buildSearchState: buildSearchState,
+    isSuggestion: isSuggestion,
     handleKeyDown: handleKeyDown,
+    handleMouseDown: handleMouseDown,
     isPlainClick: isPlainClick,
     buildState: buildState,
     handleClick: handleClick,

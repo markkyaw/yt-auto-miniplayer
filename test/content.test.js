@@ -15,7 +15,8 @@ function installModules(options) {
   globalThis.YtAmp.page = {
     SELECTORS: {
       searchBox: 'yt-searchbox',
-      searchSubmit: '.ytSearchboxComponentActions'
+      searchSubmit: '.ytSearchboxComponentActions',
+      searchSuggestion: '.ytSearchboxComponentSuggestionsContainer'
     },
     isWatchPage() { return opts.onWatchPage !== false; },
     isQueueOpen() { return opts.queueOpen === true; },
@@ -290,6 +291,79 @@ test('start arms the key listener as well as the click listener', async () => {
   installModules({});
   content.start();
   await new Promise((resolve) => setTimeout(resolve, 0));
-  assert.deepStrictEqual(dom.listeners.map((one) => one.type), ['click', 'keydown']);
+  assert.strictEqual(dom.listeners[1].type, 'keydown');
   assert.strictEqual(dom.listeners[1].capture, true);
+});
+
+// The suggestion list closes before the click, so mousedown is the
+// only event that still carries the suggestion.
+function suggestionEvent(options) {
+  const opts = options || {};
+  const path = [fakeElement({ tagName: 'SPAN' })];
+  if (opts.button === undefined || opts.onSuggestion !== false) {
+    if (opts.hasButton) path.push(fakeElement({ tagName: 'BUTTON' }));
+    path.push(fakeElement({
+      tagName: 'DIV',
+      matches: ['.ytSearchboxComponentSuggestionsContainer']
+    }));
+  }
+  return {
+    button: opts.button === undefined ? 0 : opts.button,
+    composedPath() { return opts.onSuggestion === false ? [fakeElement({})] : path; }
+  };
+}
+
+test('handleMouseDown opens the miniplayer for a suggestion', () => {
+  installPage({});
+  const opened = installModules({});
+  content.handleMouseDown(suggestionEvent({}));
+  assert.strictEqual(opened.count, 1);
+});
+
+test('handleMouseDown stays silent outside the suggestion list', () => {
+  installPage({});
+  const opened = installModules({});
+  content.handleMouseDown(suggestionEvent({ onSuggestion: false }));
+  assert.strictEqual(opened.count, 0);
+});
+
+// A row holds a Remove button. That button starts no search.
+test('handleMouseDown stays silent for a button in the list', () => {
+  installPage({});
+  const opened = installModules({});
+  content.handleMouseDown(suggestionEvent({ hasButton: true }));
+  assert.strictEqual(opened.count, 0);
+});
+
+test('handleMouseDown stays silent for a middle click', () => {
+  installPage({});
+  const opened = installModules({});
+  content.handleMouseDown(suggestionEvent({ button: 1 }));
+  assert.strictEqual(opened.count, 0);
+});
+
+test('handleMouseDown stays silent away from a watch page', () => {
+  installPage({});
+  const opened = installModules({ onWatchPage: false });
+  content.handleMouseDown(suggestionEvent({}));
+  assert.strictEqual(opened.count, 0);
+});
+
+test('handleMouseDown never throws', () => {
+  installPage({});
+  installModules({});
+  globalThis.YtAmp.page.isQueueOpen = function () {
+    throw new Error('YouTube changed the DOM');
+  };
+  assert.doesNotThrow(() => content.handleMouseDown(suggestionEvent({})));
+});
+
+test('start arms the mousedown listener too', async () => {
+  const dom = installPage({});
+  installModules({});
+  content.start();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.deepStrictEqual(dom.listeners.map((one) => one.type),
+    ['click', 'keydown', 'mousedown']);
+  assert.strictEqual(dom.listeners[2].capture, true);
 });

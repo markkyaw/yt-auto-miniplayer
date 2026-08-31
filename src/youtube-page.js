@@ -7,7 +7,8 @@
     miniplayer: 'ytd-miniplayer',
     video: 'video',
     searchBox: 'yt-searchbox',
-    searchSubmit: '.ytSearchboxComponentActions'
+    searchSubmit: '.ytSearchboxComponentActions',
+    searchSuggestion: '.ytSearchboxComponentSuggestionsContainer'
   };
 
   const KEY_TYPES = ['keydown', 'keypress', 'keyup'];
