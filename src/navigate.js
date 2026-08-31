@@ -18,6 +18,12 @@
     return event.destination.index < entry.index;
   }
 
+  // A search, or any navigation that YouTube starts itself.
+  function isForward(event) {
+    if (!event || !event.destination) return false;
+    return event.navigationType === 'push' || event.navigationType === 'replace';
+  }
+
   // location still holds the watch page, so the event carries the path.
   function destinationPath(event) {
     try {
@@ -25,6 +31,27 @@
     } catch (error) {
       return null;
     }
+  }
+
+  function destinationHost(event) {
+    try {
+      return new root.URL(event.destination.url).host;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function buildForwardState(event) {
+    const page = root.YtAmp.page;
+    return {
+      enabled: root.YtAmp.settings.isEnabled(),
+      onWatchPage: root.location.pathname === WATCH_PATH,
+      sameHost: destinationHost(event) === root.location.host,
+      destinationPath: destinationPath(event),
+      queueOpen: page.isQueueOpen(),
+      miniplayerOpen: page.isMiniplayerOpen(),
+      recentlyActed: page.sentKeyRecently()
+    };
   }
 
   function buildState(path) {
@@ -51,9 +78,15 @@
   // This must never throw. A failure must never block the navigation.
   function handleNavigate(event) {
     try {
-      if (!isBackTraversal(event)) return;
       if (root.location.pathname !== WATCH_PATH) return;
-      open(destinationPath(event));
+      if (isBackTraversal(event)) {
+        open(destinationPath(event));
+        return;
+      }
+      if (!isForward(event)) return;
+      if (root.YtAmp.shouldOpenMiniplayerOnNavigate(buildForwardState(event))) {
+        root.YtAmp.page.openMiniplayer();
+      }
     } catch (error) {
       // The user's navigation is more important than this extension.
     }
@@ -83,9 +116,11 @@
   }
 
   root.YtAmp = root.YtAmp || {};
-  root.YtAmp.back = {
+  root.YtAmp.navigate = {
     isVideoPlaying: isVideoPlaying,
     isBackTraversal: isBackTraversal,
+    isForward: isForward,
+    buildForwardState: buildForwardState,
     destinationPath: destinationPath,
     buildState: buildState,
     handleNavigate: handleNavigate,
