@@ -6,7 +6,8 @@
     queuePanel: '#playlist.ytd-watch-flexy',
     miniplayer: 'ytd-miniplayer',
     video: 'video',
-    searchBox: 'yt-searchbox'
+    searchBox: 'yt-searchbox',
+    searchSubmit: '.ytSearchboxComponentActions'
   };
 
   const KEY_TYPES = ['keydown', 'keypress', 'keyup'];

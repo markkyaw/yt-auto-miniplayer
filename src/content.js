@@ -31,13 +31,14 @@
     });
   }
 
-  // Only the magnifier starts a search. A click on the text field
-  // moves the cursor, and it must change nothing.
+  // Only the magnifier starts a search. The text field moves the
+  // cursor, and the X button only clears the query. Both must change
+  // nothing, so the test names the container of the magnifier.
   function isSearchButton(event) {
     if (typeof event.composedPath !== 'function') return false;
-    if (!isInSearchBox(event)) return false;
+    const selector = root.YtAmp.page.SELECTORS.searchSubmit;
     return event.composedPath().some(function (node) {
-      return !!node && node.tagName === 'BUTTON';
+      return !!node && typeof node.matches === 'function' && node.matches(selector);
     });
   }
 

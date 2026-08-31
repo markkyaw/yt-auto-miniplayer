@@ -13,7 +13,10 @@ function installModules(options) {
   const opts = options || {};
   const opened = { count: 0 };
   globalThis.YtAmp.page = {
-    SELECTORS: { searchBox: 'yt-searchbox' },
+    SELECTORS: {
+      searchBox: 'yt-searchbox',
+      searchSubmit: '.ytSearchboxComponentActions'
+    },
     isWatchPage() { return opts.onWatchPage !== false; },
     isQueueOpen() { return opts.queueOpen === true; },
     isMiniplayerOpen() { return opts.miniplayerOpen === true; },
@@ -248,10 +251,26 @@ test('handleClick opens the miniplayer for the magnifier button', () => {
   const opened = installModules({});
   const event = clickEvent({ link: null });
   event.composedPath = function () {
-    return [fakeElement({ tagName: 'BUTTON' }), searchElement()];
+    return [
+      fakeElement({ tagName: 'BUTTON' }),
+      fakeElement({ tagName: 'DIV', matches: ['.ytSearchboxComponentActions'] }),
+      searchElement()
+    ];
   };
   content.handleClick(event);
   assert.strictEqual(opened.count, 1);
+});
+
+// The X only clears the query. The user stays on the watch page.
+test('handleClick stays silent for the clear button', () => {
+  installPage({});
+  const opened = installModules({});
+  const event = clickEvent({ link: null });
+  event.composedPath = function () {
+    return [fakeElement({ tagName: 'BUTTON' }), searchElement()];
+  };
+  content.handleClick(event);
+  assert.strictEqual(opened.count, 0);
 });
 
 // A click on the text field only puts the cursor in the box.

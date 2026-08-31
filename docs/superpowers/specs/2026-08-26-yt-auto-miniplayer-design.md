@@ -236,8 +236,13 @@ The search box is a `TEXTAREA` inside a form, and the form sits in
 `yt-searchbox`. YouTube handles the Enter key and the magnifier button
 in JavaScript, and it fires **no** `submit` event. So the extension
 reads the `keydown` event at the capture phase, and it reads a click
-on a `BUTTON` inside `yt-searchbox`. A click on the text field only
-moves the cursor, so a click alone is not enough.
+inside `.ytSearchboxComponentActions`, which holds the magnifier
+button.
+
+The search box holds three buttons: the magnifier, a Clear button with
+the class `ytSearchboxComponentClearButton`, and a report button. Only
+the magnifier starts a search. So the rule names the container of the
+magnifier, and it ignores every other button and the text field.
 
 `shouldOpenMiniplayerOnSearch(state)` returns `true` when all of these
 are true:
